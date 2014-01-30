@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 /*
 * THIS FILE IS GENERATED! DO NOT EDIT!
 * REFER TO AsanaFunctionDefinitions.xml
@@ -49,636 +50,419 @@ namespace AsanaNet
 		// Function definitions specifically for the GET functions.
 		public partial class Asana
 		{
-			public Task GetUsers(AsanaCollectionResponseEventHandler callback)
+			public async Task<AsanaObjectCollection<AsanaUser>> GetUsers(string optFields = null, bool missCache = false, bool missCollectionElementsCache = false)
 			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetUsers));
-				return request.Go((o, h) => PackAndSendResponseCollection<AsanaUser>(o, callback), ErrorCallback);
-			}
-			public async Task<AsanaObjectCollection<AsanaUser>> GetUsers()
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetUsers));
-                var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetUsers), uri);
-                return AsanaRequest.GetResponseCollection<AsanaUser>(response, this);
-			}
-			
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetUsers)); 
+				
+                var cachedObject = (AsanaObjectCollection<AsanaUser>) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetUsers), new Dictionary<string,object>{{"opt_fields", optFields}});
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetUsers));
 
-			public Task GetMe(AsanaResponseEventHandler callback)
-			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetMe));
-				return request.Go((o, h) => PackAndSendResponse<AsanaUser>(o, callback), ErrorCallback);
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetUsers), uri);
+                var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, !missCollectionElementsCache);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			public async Task<AsanaUser> GetMe()
+
+			public async Task<AsanaUser> GetMe(string optFields = null, bool missCache = false)
 			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetMe));
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetMe)); 
+				
+                var cachedObject = (AsanaUser) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetMe), new Dictionary<string,object>{{"opt_fields", optFields}});
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetMe));
+
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetMe), uri);
-                return AsanaRequest.GetResponse<AsanaUser>(response, this);
+                var output = AsanaRequest.GetResponse(response, this, cachedObject);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			
 
-			public Task GetUserById(Int64 arg1, AsanaResponseEventHandler callback)
+			public async Task<AsanaUser> GetUserById(Int64 arg1, string optFields = null, bool missCache = false)
 			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetUserById), arg1);
-				return request.Go((o, h) => PackAndSendResponse<AsanaUser>(o, callback), ErrorCallback);
-			}
-			public async Task<AsanaUser> GetUserById(Int64 arg1)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetUserById), arg1);
+				string cachePath = string.Format(new PropertyFormatProvider(), "{0}", arg1);
+                var cachedObject = (AsanaUser) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetUserById), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetUserById), arg1);
+
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetUserById), uri);
-                return AsanaRequest.GetResponse<AsanaUser>(response, this);
+                var output = AsanaRequest.GetResponse(response, this, cachedObject);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			
 
-			public Task GetWorkspaces(AsanaCollectionResponseEventHandler callback)
+			public async Task<AsanaObjectCollection<AsanaWorkspace>> GetWorkspaces(string optFields = null, bool missCache = false, bool missCollectionElementsCache = false)
 			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetWorkspaces));
-				return request.Go((o, h) => PackAndSendResponseCollection<AsanaWorkspace>(o, callback), ErrorCallback);
-			}
-			public async Task<AsanaObjectCollection<AsanaWorkspace>> GetWorkspaces()
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetWorkspaces));
-                var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetWorkspaces), uri);
-                return AsanaRequest.GetResponseCollection<AsanaWorkspace>(response, this);
-			}
-			
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetWorkspaces)); 
+				
+                var cachedObject = (AsanaObjectCollection<AsanaWorkspace>) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetWorkspaces), new Dictionary<string,object>{{"opt_fields", optFields}});
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetWorkspaces));
 
-			public Task GetWorkspaceById(Int64 arg1, AsanaResponseEventHandler callback)
-			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetWorkspaceById), arg1);
-				return request.Go((o, h) => PackAndSendResponse<AsanaWorkspace>(o, callback), ErrorCallback);
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetWorkspaces), uri);
+                var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, !missCollectionElementsCache);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			public async Task<AsanaWorkspace> GetWorkspaceById(Int64 arg1)
+
+			public async Task<AsanaWorkspace> GetWorkspaceById(Int64 arg1, string optFields = null, bool missCache = false)
 			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetWorkspaceById), arg1);
+				string cachePath = string.Format(new PropertyFormatProvider(), "{0}", arg1);
+                var cachedObject = (AsanaWorkspace) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetWorkspaceById), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetWorkspaceById), arg1);
+
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetWorkspaceById), uri);
-                return AsanaRequest.GetResponse<AsanaWorkspace>(response, this);
+                var output = AsanaRequest.GetResponse(response, this, cachedObject);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			
 
-			public Task GetUsersInWorkspace(AsanaWorkspace arg1, AsanaCollectionResponseEventHandler callback)
+			public async Task<AsanaObjectCollection<AsanaUser>> GetUsersInWorkspace(AsanaWorkspace arg1, string optFields = null, bool missCache = false, bool missCollectionElementsCache = false)
 			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetUsersInWorkspace), arg1);
-				return request.Go((o, h) => PackAndSendResponseCollection<AsanaUser>(o, callback), ErrorCallback);
-			}
-			public async Task<AsanaObjectCollection<AsanaUser>> GetUsersInWorkspace(AsanaWorkspace arg1)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetUsersInWorkspace), arg1);
-                var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetUsersInWorkspace), uri);
-                return AsanaRequest.GetResponseCollection<AsanaUser>(response, this);
-			}
-			
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetUsersInWorkspace), arg1); 
+				
+                var cachedObject = (AsanaObjectCollection<AsanaUser>) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetUsersInWorkspace), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetUsersInWorkspace), arg1);
 
-			public Task GetTasksInWorkspace(AsanaWorkspace arg1,  AsanaUser arg2, AsanaCollectionResponseEventHandler callback)
-			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTasksInWorkspace), arg1, arg2);
-				return request.Go((o, h) => PackAndSendResponseCollection<AsanaTask>(o, callback), ErrorCallback);
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetUsersInWorkspace), uri);
+                var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, !missCollectionElementsCache);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			public async Task<AsanaObjectCollection<AsanaTask>> GetTasksInWorkspace(AsanaWorkspace arg1,  AsanaUser arg2)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTasksInWorkspace), arg1, arg2);
-                var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTasksInWorkspace), uri);
-                return AsanaRequest.GetResponseCollection<AsanaTask>(response, this);
-			}
-			
 
-			public Task GetProjectsInWorkspace(AsanaWorkspace arg1, AsanaCollectionResponseEventHandler callback)
+			public async Task<AsanaObjectCollection<AsanaTask>> GetTasksInWorkspace(AsanaWorkspace arg1,  AsanaUser arg2, string optFields = null, bool missCache = false, bool missCollectionElementsCache = false)
 			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetProjectsInWorkspace), arg1);
-				return request.Go((o, h) => PackAndSendResponseCollection<AsanaProject>(o, callback), ErrorCallback);
-			}
-			public async Task<AsanaObjectCollection<AsanaProject>> GetProjectsInWorkspace(AsanaWorkspace arg1)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetProjectsInWorkspace), arg1);
-                var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetProjectsInWorkspace), uri);
-                return AsanaRequest.GetResponseCollection<AsanaProject>(response, this);
-			}
-			
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTasksInWorkspace), arg1, arg2); 
+				
+                var cachedObject = (AsanaObjectCollection<AsanaTask>) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetTasksInWorkspace), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1, arg2);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTasksInWorkspace), arg1, arg2);
 
-			public Task GetTagsInWorkspace(AsanaWorkspace arg1, AsanaCollectionResponseEventHandler callback)
-			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTagsInWorkspace), arg1);
-				return request.Go((o, h) => PackAndSendResponseCollection<AsanaTag>(o, callback), ErrorCallback);
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTasksInWorkspace), uri);
+                var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, !missCollectionElementsCache);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			public async Task<AsanaObjectCollection<AsanaTag>> GetTagsInWorkspace(AsanaWorkspace arg1)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTagsInWorkspace), arg1);
-                var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTagsInWorkspace), uri);
-                return AsanaRequest.GetResponseCollection<AsanaTag>(response, this);
-			}
-			
 
-			public Task GetTaskById(Int64 arg1, AsanaResponseEventHandler callback)
+			public async Task<AsanaObjectCollection<AsanaProject>> GetProjectsInWorkspace(AsanaWorkspace arg1, string optFields = null, bool missCache = false, bool missCollectionElementsCache = false)
 			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTaskById), arg1);
-				return request.Go((o, h) => PackAndSendResponse<AsanaTask>(o, callback), ErrorCallback);
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetProjectsInWorkspace), arg1); 
+				
+                var cachedObject = (AsanaObjectCollection<AsanaProject>) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetProjectsInWorkspace), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetProjectsInWorkspace), arg1);
+
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetProjectsInWorkspace), uri);
+                var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, !missCollectionElementsCache);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			public async Task<AsanaTask> GetTaskById(Int64 arg1)
+
+			public async Task<AsanaObjectCollection<AsanaTag>> GetTagsInWorkspace(AsanaWorkspace arg1, string optFields = null, bool missCache = false, bool missCollectionElementsCache = false)
 			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTaskById), arg1);
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTagsInWorkspace), arg1); 
+				
+                var cachedObject = (AsanaObjectCollection<AsanaTag>) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetTagsInWorkspace), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTagsInWorkspace), arg1);
+
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTagsInWorkspace), uri);
+                var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, !missCollectionElementsCache);
+				_objectCache.Set(cachePath, output);
+				return output;
+			}
+
+			public async Task<AsanaTask> GetTaskById(Int64 arg1, string optFields = null, bool missCache = false)
+			{
+				string cachePath = string.Format(new PropertyFormatProvider(), "{0}", arg1);
+                var cachedObject = (AsanaTask) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetTaskById), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTaskById), arg1);
+
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTaskById), uri);
-                return AsanaRequest.GetResponse<AsanaTask>(response, this);
+                var output = AsanaRequest.GetResponse(response, this, cachedObject);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			
 
-			public Task GetSubtasksInTask(AsanaTask arg1, AsanaCollectionResponseEventHandler callback)
+			public async Task<AsanaObjectCollection<AsanaTask>> GetSubtasksInTask(AsanaTask arg1, string optFields = null, bool missCache = false, bool missCollectionElementsCache = false)
 			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetSubtasksInTask), arg1);
-				return request.Go((o, h) => PackAndSendResponseCollection<AsanaTask>(o, callback), ErrorCallback);
-			}
-			public async Task<AsanaObjectCollection<AsanaTask>> GetSubtasksInTask(AsanaTask arg1)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetSubtasksInTask), arg1);
-                var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetSubtasksInTask), uri);
-                return AsanaRequest.GetResponseCollection<AsanaTask>(response, this);
-			}
-			
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetSubtasksInTask), arg1); 
+				
+                var cachedObject = (AsanaObjectCollection<AsanaTask>) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetSubtasksInTask), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetSubtasksInTask), arg1);
 
-			public Task GetStoriesInTask(AsanaTask arg1, AsanaCollectionResponseEventHandler callback)
-			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetStoriesInTask), arg1);
-				return request.Go((o, h) => PackAndSendResponseCollection<AsanaStory>(o, callback), ErrorCallback);
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetSubtasksInTask), uri);
+                var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, !missCollectionElementsCache);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			public async Task<AsanaObjectCollection<AsanaStory>> GetStoriesInTask(AsanaTask arg1)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetStoriesInTask), arg1);
-                var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetStoriesInTask), uri);
-                return AsanaRequest.GetResponseCollection<AsanaStory>(response, this);
-			}
-			
 
-			public Task GetProjectsOnATask(AsanaTask arg1, AsanaCollectionResponseEventHandler callback)
+			public async Task<AsanaObjectCollection<AsanaStory>> GetStoriesInTask(AsanaTask arg1, string optFields = null, bool missCache = false, bool missCollectionElementsCache = false)
 			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetProjectsOnATask), arg1);
-				return request.Go((o, h) => PackAndSendResponseCollection<AsanaProject>(o, callback), ErrorCallback);
-			}
-			public async Task<AsanaObjectCollection<AsanaProject>> GetProjectsOnATask(AsanaTask arg1)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetProjectsOnATask), arg1);
-                var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetProjectsOnATask), uri);
-                return AsanaRequest.GetResponseCollection<AsanaProject>(response, this);
-			}
-			
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetStoriesInTask), arg1); 
+				
+                var cachedObject = (AsanaObjectCollection<AsanaStory>) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetStoriesInTask), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetStoriesInTask), arg1);
 
-			public Task GetTasksByTag(AsanaTag arg1, AsanaCollectionResponseEventHandler callback)
-			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTasksByTag), arg1);
-				return request.Go((o, h) => PackAndSendResponseCollection<AsanaTask>(o, callback), ErrorCallback);
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetStoriesInTask), uri);
+                var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, !missCollectionElementsCache);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			public async Task<AsanaObjectCollection<AsanaTask>> GetTasksByTag(AsanaTag arg1)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTasksByTag), arg1);
-                var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTasksByTag), uri);
-                return AsanaRequest.GetResponseCollection<AsanaTask>(response, this);
-			}
-			
 
-			public Task GetStoryById(Int64 arg1, AsanaResponseEventHandler callback)
+			public async Task<AsanaObjectCollection<AsanaProject>> GetProjectsOnATask(AsanaTask arg1, string optFields = null, bool missCache = false, bool missCollectionElementsCache = false)
 			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetStoryById), arg1);
-				return request.Go((o, h) => PackAndSendResponse<AsanaStory>(o, callback), ErrorCallback);
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetProjectsOnATask), arg1); 
+				
+                var cachedObject = (AsanaObjectCollection<AsanaProject>) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetProjectsOnATask), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetProjectsOnATask), arg1);
+
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetProjectsOnATask), uri);
+                var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, !missCollectionElementsCache);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			public async Task<AsanaStory> GetStoryById(Int64 arg1)
+
+			public async Task<AsanaObjectCollection<AsanaTask>> GetTasksByTag(AsanaTag arg1, string optFields = null, bool missCache = false, bool missCollectionElementsCache = false)
 			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetStoryById), arg1);
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTasksByTag), arg1); 
+				
+                var cachedObject = (AsanaObjectCollection<AsanaTask>) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetTasksByTag), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTasksByTag), arg1);
+
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTasksByTag), uri);
+                var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, !missCollectionElementsCache);
+				_objectCache.Set(cachePath, output);
+				return output;
+			}
+
+			public async Task<AsanaStory> GetStoryById(Int64 arg1, string optFields = null, bool missCache = false)
+			{
+				string cachePath = string.Format(new PropertyFormatProvider(), "{0}", arg1);
+                var cachedObject = (AsanaStory) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetStoryById), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetStoryById), arg1);
+
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetStoryById), uri);
-                return AsanaRequest.GetResponse<AsanaStory>(response, this);
+                var output = AsanaRequest.GetResponse(response, this, cachedObject);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			
 
-			public Task GetProjectById(Int64 arg1, AsanaResponseEventHandler callback)
+			public async Task<AsanaProject> GetProjectById(Int64 arg1, string optFields = null, bool missCache = false)
 			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetProjectById), arg1);
-				return request.Go((o, h) => PackAndSendResponse<AsanaProject>(o, callback), ErrorCallback);
-			}
-			public async Task<AsanaProject> GetProjectById(Int64 arg1)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetProjectById), arg1);
+				string cachePath = string.Format(new PropertyFormatProvider(), "{0}", arg1);
+                var cachedObject = (AsanaProject) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetProjectById), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetProjectById), arg1);
+
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetProjectById), uri);
-                return AsanaRequest.GetResponse<AsanaProject>(response, this);
+                var output = AsanaRequest.GetResponse(response, this, cachedObject);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			
 
-			public Task GetTasksInAProject(AsanaProject arg1, AsanaCollectionResponseEventHandler callback)
+			public async Task<AsanaObjectCollection<AsanaTask>> GetTasksInAProject(AsanaProject arg1, string optFields = null, bool missCache = false, bool missCollectionElementsCache = false)
 			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTasksInAProject), arg1);
-				return request.Go((o, h) => PackAndSendResponseCollection<AsanaTask>(o, callback), ErrorCallback);
-			}
-			public async Task<AsanaObjectCollection<AsanaTask>> GetTasksInAProject(AsanaProject arg1)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTasksInAProject), arg1);
-                var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTasksInAProject), uri);
-                return AsanaRequest.GetResponseCollection<AsanaTask>(response, this);
-			}
-			
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTasksInAProject), arg1); 
+				
+                var cachedObject = (AsanaObjectCollection<AsanaTask>) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetTasksInAProject), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTasksInAProject), arg1);
 
-			public Task GetTagById(Int64 arg1, AsanaResponseEventHandler callback)
-			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTagById), arg1);
-				return request.Go((o, h) => PackAndSendResponse<AsanaTag>(o, callback), ErrorCallback);
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTasksInAProject), uri);
+                var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, !missCollectionElementsCache);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			public async Task<AsanaTag> GetTagById(Int64 arg1)
+
+			public async Task<AsanaTag> GetTagById(Int64 arg1, string optFields = null, bool missCache = false)
 			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTagById), arg1);
+				string cachePath = string.Format(new PropertyFormatProvider(), "{0}", arg1);
+                var cachedObject = (AsanaTag) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetTagById), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTagById), arg1);
+
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTagById), uri);
-                return AsanaRequest.GetResponse<AsanaTag>(response, this);
+                var output = AsanaRequest.GetResponse(response, this, cachedObject);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			
 
-			public Task GetTeamsInWorkspace(AsanaWorkspace arg1, AsanaCollectionResponseEventHandler callback)
+			public async Task<AsanaObjectCollection<AsanaTeam>> GetTeamsInWorkspace(AsanaWorkspace arg1, string optFields = null, bool missCache = false, bool missCollectionElementsCache = false)
 			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTeamsInWorkspace), arg1);
-				return request.Go((o, h) => PackAndSendResponseCollection<AsanaTeam>(o, callback), ErrorCallback);
-			}
-			public async Task<AsanaObjectCollection<AsanaTeam>> GetTeamsInWorkspace(AsanaWorkspace arg1)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTeamsInWorkspace), arg1);
-                var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTeamsInWorkspace), uri);
-                return AsanaRequest.GetResponseCollection<AsanaTeam>(response, this);
-			}
-			
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTeamsInWorkspace), arg1); 
+				
+                var cachedObject = (AsanaObjectCollection<AsanaTeam>) _objectCache.Get(cachePath);
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetTeamsInWorkspace), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTeamsInWorkspace), arg1);
 
-
-
-
-			public Task Get<AsanaT>(AsanaCollectionResponseEventHandler callback) where AsanaT : AsanaObject
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(typeof(AsanaT) == typeof(AsanaUser))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetUsers));
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaUser>(o, callback), ErrorCallback);
-				}
-
-								
-				if(typeof(AsanaT) == typeof(AsanaWorkspace))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetWorkspaces));
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaWorkspace>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + typeof(AsanaT).Name);
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTeamsInWorkspace), uri);
+                var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, !missCollectionElementsCache);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
 
-			public Task Get(Type AsanaT, AsanaCollectionResponseEventHandler callback)
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(AsanaT == typeof(AsanaUser))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetUsers));
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaUser>(o, callback), ErrorCallback);
-				}
-
-								
-				if(AsanaT == typeof(AsanaWorkspace))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetWorkspaces));
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaWorkspace>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + AsanaT.Name);
-			}
-
-			public Task Get<AsanaT>(AsanaResponseEventHandler callback) where AsanaT : AsanaObject
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(typeof(AsanaT) == typeof(AsanaUser))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetMe));
-					return request.Go((o, h) => PackAndSendResponse<AsanaUser>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + typeof(AsanaT).Name);
-			}
-
-			public Task Get(Type AsanaT, AsanaResponseEventHandler callback)
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(AsanaT == typeof(AsanaUser))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetMe));
-					return request.Go((o, h) => PackAndSendResponse<AsanaUser>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + AsanaT.Name);
-			}
-
-			public Task Get<AsanaT>(Int64 arg1, AsanaResponseEventHandler callback) where AsanaT : AsanaObject
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(typeof(AsanaT) == typeof(AsanaUser))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetUserById), arg1);
-					return request.Go((o, h) => PackAndSendResponse<AsanaUser>(o, callback), ErrorCallback);
-				}
-
-								
-				if(typeof(AsanaT) == typeof(AsanaWorkspace))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetWorkspaceById), arg1);
-					return request.Go((o, h) => PackAndSendResponse<AsanaWorkspace>(o, callback), ErrorCallback);
-				}
-
-								
-				if(typeof(AsanaT) == typeof(AsanaTask))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTaskById), arg1);
-					return request.Go((o, h) => PackAndSendResponse<AsanaTask>(o, callback), ErrorCallback);
-				}
-
-								
-				if(typeof(AsanaT) == typeof(AsanaStory))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetStoryById), arg1);
-					return request.Go((o, h) => PackAndSendResponse<AsanaStory>(o, callback), ErrorCallback);
-				}
-
-								
-				if(typeof(AsanaT) == typeof(AsanaProject))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetProjectById), arg1);
-					return request.Go((o, h) => PackAndSendResponse<AsanaProject>(o, callback), ErrorCallback);
-				}
-
-								
-				if(typeof(AsanaT) == typeof(AsanaTag))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTagById), arg1);
-					return request.Go((o, h) => PackAndSendResponse<AsanaTag>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + typeof(AsanaT).Name);
-			}
-
-			public Task Get(Type AsanaT, Int64 arg1, AsanaResponseEventHandler callback)
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(AsanaT == typeof(AsanaUser))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetUserById), arg1);
-					return request.Go((o, h) => PackAndSendResponse<AsanaUser>(o, callback), ErrorCallback);
-				}
-
-								
-				if(AsanaT == typeof(AsanaWorkspace))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetWorkspaceById), arg1);
-					return request.Go((o, h) => PackAndSendResponse<AsanaWorkspace>(o, callback), ErrorCallback);
-				}
-
-								
-				if(AsanaT == typeof(AsanaTask))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTaskById), arg1);
-					return request.Go((o, h) => PackAndSendResponse<AsanaTask>(o, callback), ErrorCallback);
-				}
-
-								
-				if(AsanaT == typeof(AsanaStory))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetStoryById), arg1);
-					return request.Go((o, h) => PackAndSendResponse<AsanaStory>(o, callback), ErrorCallback);
-				}
-
-								
-				if(AsanaT == typeof(AsanaProject))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetProjectById), arg1);
-					return request.Go((o, h) => PackAndSendResponse<AsanaProject>(o, callback), ErrorCallback);
-				}
-
-								
-				if(AsanaT == typeof(AsanaTag))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTagById), arg1);
-					return request.Go((o, h) => PackAndSendResponse<AsanaTag>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + AsanaT.Name);
-			}
-
-			public Task Get<AsanaT>(AsanaWorkspace arg1, AsanaCollectionResponseEventHandler callback) where AsanaT : AsanaObject
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(typeof(AsanaT) == typeof(AsanaUser))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetUsersInWorkspace), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaUser>(o, callback), ErrorCallback);
-				}
-
-								
-				if(typeof(AsanaT) == typeof(AsanaProject))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetProjectsInWorkspace), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaProject>(o, callback), ErrorCallback);
-				}
-
-								
-				if(typeof(AsanaT) == typeof(AsanaTag))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTagsInWorkspace), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaTag>(o, callback), ErrorCallback);
-				}
-
-								
-				if(typeof(AsanaT) == typeof(AsanaTeam))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTeamsInWorkspace), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaTeam>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + typeof(AsanaT).Name);
-			}
-
-			public Task Get(Type AsanaT, AsanaWorkspace arg1, AsanaCollectionResponseEventHandler callback)
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(AsanaT == typeof(AsanaUser))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetUsersInWorkspace), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaUser>(o, callback), ErrorCallback);
-				}
-
-								
-				if(AsanaT == typeof(AsanaProject))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetProjectsInWorkspace), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaProject>(o, callback), ErrorCallback);
-				}
-
-								
-				if(AsanaT == typeof(AsanaTag))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTagsInWorkspace), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaTag>(o, callback), ErrorCallback);
-				}
-
-								
-				if(AsanaT == typeof(AsanaTeam))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTeamsInWorkspace), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaTeam>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + AsanaT.Name);
-			}
-
-			public Task Get<AsanaT>(AsanaWorkspace arg1,  AsanaUser arg2, AsanaCollectionResponseEventHandler callback) where AsanaT : AsanaObject
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(typeof(AsanaT) == typeof(AsanaTask))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTasksInWorkspace), arg1, arg2);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaTask>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + typeof(AsanaT).Name);
-			}
-
-			public Task Get(Type AsanaT, AsanaWorkspace arg1,  AsanaUser arg2, AsanaCollectionResponseEventHandler callback)
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(AsanaT == typeof(AsanaTask))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTasksInWorkspace), arg1, arg2);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaTask>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + AsanaT.Name);
-			}
-
-			public Task Get<AsanaT>(AsanaTask arg1, AsanaCollectionResponseEventHandler callback) where AsanaT : AsanaObject
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(typeof(AsanaT) == typeof(AsanaTask))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetSubtasksInTask), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaTask>(o, callback), ErrorCallback);
-				}
-
-								
-				if(typeof(AsanaT) == typeof(AsanaStory))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetStoriesInTask), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaStory>(o, callback), ErrorCallback);
-				}
-
-								
-				if(typeof(AsanaT) == typeof(AsanaProject))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetProjectsOnATask), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaProject>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + typeof(AsanaT).Name);
-			}
-
-			public Task Get(Type AsanaT, AsanaTask arg1, AsanaCollectionResponseEventHandler callback)
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(AsanaT == typeof(AsanaTask))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetSubtasksInTask), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaTask>(o, callback), ErrorCallback);
-				}
-
-								
-				if(AsanaT == typeof(AsanaStory))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetStoriesInTask), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaStory>(o, callback), ErrorCallback);
-				}
-
-								
-				if(AsanaT == typeof(AsanaProject))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetProjectsOnATask), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaProject>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + AsanaT.Name);
-			}
-
-			public Task Get<AsanaT>(AsanaTag arg1, AsanaCollectionResponseEventHandler callback) where AsanaT : AsanaObject
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(typeof(AsanaT) == typeof(AsanaTask))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTasksByTag), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaTask>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + typeof(AsanaT).Name);
-			}
-
-			public Task Get(Type AsanaT, AsanaTag arg1, AsanaCollectionResponseEventHandler callback)
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(AsanaT == typeof(AsanaTask))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTasksByTag), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaTask>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + AsanaT.Name);
-			}
-
-			public Task Get<AsanaT>(AsanaProject arg1, AsanaCollectionResponseEventHandler callback) where AsanaT : AsanaObject
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(typeof(AsanaT) == typeof(AsanaTask))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTasksInAProject), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaTask>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + typeof(AsanaT).Name);
-			}
-
-			public Task Get(Type AsanaT, AsanaProject arg1, AsanaCollectionResponseEventHandler callback)
-			{
-				AsanaRequest request = default(AsanaRequest);
-								
-				if(AsanaT == typeof(AsanaTask))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.GetTasksInAProject), arg1);
-					return request.Go((o, h) => PackAndSendResponseCollection<AsanaTask>(o, callback), ErrorCallback);
-				}
-
-								
-                throw new TypeAccessException("Unknown type for this request: " + AsanaT.Name);
-			}
-
-
-	}
+		}
 
 		// Binds the enums, formations and methods
 		public partial class AsanaFunction
