@@ -155,10 +155,4 @@ namespace AsanaNet
         }
 
     }
-    /*public enum CacheOptions
-    {
-        ReplaceObject = 0,
-        FillExisting = 1,
-        UseExisting = 2
-    }*/
 }

@@ -65,7 +65,7 @@ namespace AsanaNetTests
             Console.ReadLine();
 
             Console.WriteLine("Only updating the fetched data.");
-            projects = await Asana.GetProjectsInWorkspace(workspace, null, true);
+            projects = await Asana.GetProjectsInWorkspace(workspace, null, AsanaCacheLevel.FillExisting);
             foreach (var project in projects)
             {
                 Console.WriteLine("{1}: {0}", project.Name, project.Team);
@@ -74,7 +74,7 @@ namespace AsanaNetTests
             Console.ReadLine();
 
             Console.WriteLine("Resetting everything and updating from Asana (team shouldn't be visible).");
-            projects = await Asana.GetProjectsInWorkspace(workspace, null, true, true);
+            projects = await Asana.GetProjectsInWorkspace(workspace, null, AsanaCacheLevel.Ignore);
             foreach (var project in projects)
             {
                 Console.WriteLine("{1}: {0}", project.Name, project.Team);

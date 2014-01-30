@@ -43,6 +43,8 @@ namespace AsanaNet
 
         internal ICache _objectCache;
 
+        public AsanaCacheLevel DefaultCacheLevel = AsanaCacheLevel.UseExisting;
+
         #endregion
 
         #region Properties
@@ -75,11 +77,12 @@ namespace AsanaNet
         /// Creates a new Asana entry point.
         /// </summary>
 		/// <param name="apiKeyOrBearerToken">The API key (for Basic authentication) or Bearer Token (for OAuth authentication) for the account we intend to access</param>
-		public Asana(string apiKeyOrBearerToken, AuthenticationType authType, Action<string, string, string> errorCallback, ICache cache = null)
+		public Asana(string apiKeyOrBearerToken, AuthenticationType authType, Action<string, string, string> errorCallback, ICache cache = null, AsanaCacheLevel defaultCacheLevel = AsanaCacheLevel.UseExisting)
         {   
             _baseUrl = "https://app.asana.com/api/1.0";
             _errorCallback = errorCallback;
             _objectCache = cache ?? new MemCache(Guid.NewGuid().ToString() + "/");
+            DefaultCacheLevel = defaultCacheLevel;
 
 			AuthType = authType;
 			if (AuthType == AuthenticationType.OAuth) {
@@ -211,5 +214,12 @@ namespace AsanaNet
         }
 
         #endregion
+    }
+    public enum AsanaCacheLevel
+    {
+        Ignore = 0, // Always fetch new objects
+        FillExisting = 1, // If Possible
+        UseExisting = 2, // If Possible
+        Default = AsanaCacheLevel.UseExisting
     }
 }
