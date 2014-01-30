@@ -39,6 +39,10 @@ namespace AsanaNet
         /// </summary>
         private Action<string, string, string> _errorCallback;
 
+        internal readonly HttpClient _baseHttpClient = new HttpClient();
+
+        internal ICache _objectCache;
+
         #endregion
 
         #region Properties
@@ -71,10 +75,11 @@ namespace AsanaNet
         /// Creates a new Asana entry point.
         /// </summary>
 		/// <param name="apiKeyOrBearerToken">The API key (for Basic authentication) or Bearer Token (for OAuth authentication) for the account we intend to access</param>
-		public Asana(string apiKeyOrBearerToken, AuthenticationType authType, Action<string, string, string> errorCallback)
+		public Asana(string apiKeyOrBearerToken, AuthenticationType authType, Action<string, string, string> errorCallback, ICache cache = null)
         {   
             _baseUrl = "https://app.asana.com/api/1.0";
             _errorCallback = errorCallback;
+            _objectCache = cache ?? new MemCache(Guid.NewGuid().ToString() + "/");
 
 			AuthType = authType;
 			if (AuthType == AuthenticationType.OAuth) {
@@ -93,75 +98,26 @@ namespace AsanaNet
             AsanaFunction.InitFunctions();
         }
 
-        internal readonly HttpClient _baseHttpClient = new HttpClient();
-
         private Uri GetBaseUri(AsanaFunction function, params object[] obj)
         {
-            var uri = _baseUrl + string.Format(new PropertyFormatProvider(), function.Url, obj);
-            return new Uri(uri);
+            return new Uri(_baseUrl + GetAsanaPartUri(function, obj));
         }
 
         private Uri GetBaseUriWithParams(AsanaFunction function, Dictionary<string, object> args, params object[] obj)
         {
-            var uri = _baseUrl + string.Format(new PropertyFormatProvider(), function.Url, obj);
+            var uri = _baseUrl + GetAsanaPartUri(function, obj);
             if (!ReferenceEquals(args, null) && args.Count > 0)
             {
-                uri += "?";
+                uri += uri.Contains("?") ? "&" : "?";
                 foreach (var kv in args)
                     uri += kv.Key + "=" + Uri.EscapeUriString(kv.Value.ToString()) + "&";
                 uri = uri.TrimEnd('&');
             }
             return new Uri(uri);
         }
-
-        /// <summary>
-        /// Creates a base request object with authorization data. 
-        /// </summary>
-        /// <param name="append">The string we want to append to the request</param>
-        /// <returns></returns>
-        // depracated
-        private AsanaRequest GetBaseRequest(AsanaFunction function, params object[] obj)
+        private string GetAsanaPartUri(AsanaFunction function, params object[] obj)
         {
-            string url = _baseUrl + string.Format(new PropertyFormatProvider(), function.Url, obj);
-
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-			if(AuthType == AuthenticationType.Basic)
-				request.Headers["Authorization"] = "Basic " + EncodedAPIKey;
-			else if(AuthType == AuthenticationType.OAuth)
-				request.Headers["Authorization"] = "Bearer " + OAuthToken;
-            request.Method = function.Method;
-            request.UserAgent = "AsanaNet (github.com/acron0/AsanaNet)";
-            return new AsanaRequest(request);
-        }
-
-        /// <summary>
-        /// Creates a base request object with authorization data AND POST data.
-        /// </summary>
-        /// <param name="append">The string we want to append to the request</param>
-        /// <returns></returns>
-        // depracated
-        private AsanaRequest GetBaseRequestWithParams(AsanaFunction function, Dictionary<string, object> args, params object[] obj)
-        {
-            string url = _baseUrl + string.Format(new PropertyFormatProvider(), function.Url, obj);
-
-            if (args.Count > 0)
-            {
-                url += "?";
-                foreach (var kv in args)
-                    url += kv.Key.ToString() + "=" + Uri.EscapeUriString(kv.Value.ToString()) + "&";
-                url = url.TrimEnd('&');
-            }
-
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-			if(AuthType == AuthenticationType.Basic)
-				request.Headers["Authorization"] = "Basic " + EncodedAPIKey;
-			else if(AuthType == AuthenticationType.OAuth)
-				request.Headers["Authorization"] = "Bearer " + OAuthToken;
-            request.Method = function.Method;
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.ContentLength = 0;
-
-            return new AsanaRequest(request);
+            return string.Format(new PropertyFormatProvider(), function.Url, obj);
         }
 
         /// <summary>
@@ -203,51 +159,6 @@ namespace AsanaNet
         }
 
         /// <summary>
-        /// Packs the data and into a collection object and sends it to the callback
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="callback"></param>
-        // depracated
-        internal void PackAndSendResponseCollection<T>(string rawData, AsanaCollectionResponseEventHandler callback) where T : AsanaObject
-        {
-            var k = GetDataAsDictArray(rawData);
-            AsanaObjectCollection collection = new AsanaObjectCollection();
-            foreach (var j in k)
-            {
-                var t = AsanaObject.Create(typeof(T));
-                Parsing.Deserialize(j, t, this);
-                collection.Add(t);
-            }
-            callback(collection);
-        }
-
-        /// <summary>
-        /// Packs the data and into a response object and sends it to the callback
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="callback"></param>
-        internal void PackAndSendResponse<T>(string rawData, AsanaResponseEventHandler callback) where T : AsanaObject
-        {
-            var u = AsanaObject.Create(typeof(T));
-            Parsing.Deserialize(GetDataAsDict(rawData), u, this);
-            callback(u);
-        }
-
-        /// <summary>
-        /// Repacks data into an existing object
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="rawData"></param>
-        /// <param name="?"></param>
-        internal void RepackAndCallback<T>(string rawData, T obj) where T : AsanaObject
-        {
-            Parsing.Deserialize(GetDataAsDict(rawData), obj, this);
-
-            obj.SavingCallback(Parsing.Serialize(obj, false, false));
-            obj.SavedCallback();
-        }
-
-        /// <summary>
         /// Tells the asana object to save the specified object
         /// </summary>
         internal async Task<T> Save<T>(T obj, AsanaFunction func, Dictionary<string, object> data = null) where T: AsanaObject
@@ -258,9 +169,6 @@ namespace AsanaNet
 
             if (data == null)
 				data = Parsing.Serialize(obj, true, !idata.IsObjectLocal);
-
-			// depracated var
-			//AsanaRequest request = null;
 
             AsanaFunctionAssociation afa = AsanaFunction.GetFunctionAssociation(obj.GetType());
 
@@ -274,10 +182,6 @@ namespace AsanaNet
             // TODO: serialize to JSON
             // http://stackoverflow.com/questions/12458532/suppress-requiredattribute-validation-for-the-jsonmediatypeformatter-in-asp-net
             // http://www.asp.net/web-api/overview/web-api-clients/calling-a-web-api-from-a-net-client
-
-            // depracated version
-            //request = GetBaseRequestWithParams(func, data, obj);
-            //return request.Go((o, h) => RepackAndCallback(o, obj), ErrorCallback);
         }
 
         /// <summary>
@@ -292,9 +196,6 @@ namespace AsanaNet
             if (idata == null)
                 throw new NullReferenceException("All AsanaObjects must implement IAsanaData in order to Delete themselves.");
 
-			// depracated var
-			//AsanaRequest request = null;
-
             AsanaFunctionAssociation afa = AsanaFunction.GetFunctionAssociation(obj.GetType());
 
             if (idata.IsObjectLocal == false)
@@ -307,9 +208,6 @@ namespace AsanaNet
             var uri = GetBaseUriWithParams(func, null, obj);
             var response = await AsanaRequest.GoAsync(this, func, uri);
             return AsanaRequest.GetResponse<T>(response, this);
-
-//            request = GetBaseRequest(func, obj);
-//            return request.Go((o, h) => RepackAndCallback(o, obj), ErrorCallback);
         }
 
         #endregion

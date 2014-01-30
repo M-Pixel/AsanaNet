@@ -10,7 +10,7 @@ Copyright 2012 Antony WOods
 
   <!--
     These are the functions that will be called by the application.
-    The formatting is used in the following way: {[Index of paramater|int]:[Name of property on paramter object|string]}
+    The formatting is used in the following way: {[Index of paramater|int]:[Name of property on parameter object|string]}
     (If no name is specified, the ToString of the parameter will be used.)
   -->
   <!-- GET Functions -->

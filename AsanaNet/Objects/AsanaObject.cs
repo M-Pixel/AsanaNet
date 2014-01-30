@@ -24,6 +24,8 @@ namespace AsanaNet
 
         public Asana Host { get; protected set; }
 
+        //add event handler here or in separate interface extended
+
         /// <summary>
         /// A positive response has been received but any object updating has yet to be performed.
         /// </summary>
@@ -61,6 +63,7 @@ namespace AsanaNet
             if (Saved != null)
                 Saved(this);
         }
+        public virtual bool IsObjectLocal { get { return ID == 0; } }
 
         public void SetAsReferenceObject()
         {
@@ -83,16 +86,48 @@ namespace AsanaNet
                 return null;
             }
         }
+        internal static T Create<T>() where T: AsanaObject
+        {
+            try
+            {
+                var o = Activator.CreateInstance<T>();
+//                AsanaObject o = (AsanaObject)Activator.CreateInstance(t, true);
+                return o;
+            }
+            catch (System.Exception)
+            {
+                return null;
+            }
+        }
 
         /// <summary>
-        /// Creates a new T without requiring a public constructor
+        /// Creates a new T without requiring a public constructor.
+        /// If the ID exists in the cache of host, it will return that element instead.
         /// </summary>
         /// <param name="t"></param>
         /// <param name="ID"></param>
+        /// <param name="host">if not null then try to reuse the old object</param>
         /// <returns></returns>
-        internal static AsanaObject Create(Type t, Int64 ID)
+        internal static AsanaObject Create(Type t, Int64 ID, Asana host = null)
         {
+            if (host != null && host._objectCache.Contains(ID.ToString()))
+                return (AsanaObject) host._objectCache.Get(ID.ToString());
+
             AsanaObject o = Create(t);
+            o.ID = ID;
+
+            if (host != null) host._objectCache.Add(ID.ToString(), o);
+
+            return o;
+        }
+
+        internal static T Create<T>(Int64 ID, Asana host = null) where T: AsanaObject
+        {
+            if (host != null && host._objectCache.Contains(ID.ToString()))
+                return (T) host._objectCache.Get(ID.ToString());
+
+            T o = Create<T>();
+//            AsanaObject o = Create(t);
             o.ID = ID;
             return o;
         }

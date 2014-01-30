@@ -13,12 +13,7 @@ namespace AsanaNet
 
         // ------------------------------------------------------
 
-        public bool IsObjectLocal { get { return true; } }
-
-        public void Complete()
-        {
-            throw new NotImplementedException();
-        }
+        public override bool IsObjectLocal { get { return true; } }
 
         static public implicit operator AsanaTeam(Int64 ID)
         {

@@ -13,11 +13,11 @@ namespace AsanaNet
         public string Url { get; private set; }
         public string Method { get; private set; }
 
-        public AsanaFunction(string url, string methd)
+        public AsanaFunction(string url, string method)
         {
             Url = url;
-            Method = methd;
-        }        
+            Method = method;
+        }
 
         static public AsanaFunction GetFunction(Function en)
         {

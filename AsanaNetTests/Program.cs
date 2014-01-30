@@ -10,8 +10,8 @@ namespace AsanaNetTests
 {
     class Program
     {
-        private static string YOUR_API_KEY  = @"0";
-        private static Int64 YOUR_WORKSPACE   = 0; // TARGET_TEST
+        private static string YOUR_API_KEY  = @"";
+        private static Int64 YOUR_WORKSPACE = 0;
         private static Asana Asana;
         static async Task TestGetMe()
         {
@@ -46,12 +46,40 @@ namespace AsanaNetTests
 
         private static async Task TestGetProjects(AsanaWorkspace workspace)
         {
-            var projects = await Asana.GetProjectsInWorkspace(workspace);
-
+            Console.WriteLine("Fetching from Asana.");
+            var projects = await Asana.GetProjectsInWorkspace(workspace, "name,team");
             foreach (var project in projects)
             {
                 Console.WriteLine("{1}: {0}", project.Name, project.Team);
             }
+
+            Console.ReadLine();
+
+            Console.WriteLine("Fetching from cache.");
+            projects = await Asana.GetProjectsInWorkspace(workspace);
+            foreach (var project in projects)
+            {
+                Console.WriteLine("{1}: {0}", project.Name, project.Team);
+            }
+
+            Console.ReadLine();
+
+            Console.WriteLine("Only updating the fetched data.");
+            projects = await Asana.GetProjectsInWorkspace(workspace, null, true);
+            foreach (var project in projects)
+            {
+                Console.WriteLine("{1}: {0}", project.Name, project.Team);
+            }
+
+            Console.ReadLine();
+
+            Console.WriteLine("Resetting everything and updating from Asana (team shouldn't be visible).");
+            projects = await Asana.GetProjectsInWorkspace(workspace, null, true, true);
+            foreach (var project in projects)
+            {
+                Console.WriteLine("{1}: {0}", project.Name, project.Team);
+            }
+
             Console.ReadLine();
         }
 
@@ -62,13 +90,13 @@ namespace AsanaNetTests
             var workspace = Asana.GetWorkspaceById(YOUR_WORKSPACE).Result;
             Console.WriteLine(workspace.Name);
 
-            TestGetMe().Wait();
-            TestCreateTask(workspace).Wait();
+//            TestGetMe().Wait();
+//            TestCreateTask(workspace).Wait();
             TestGetProjects(workspace).Wait();
         }
         private static void ErrorCallback(string s1, string s2, string s3)
         {
-            Console.WriteLine("Error: ");
+            //Console.WriteLine("Error: ");
             Console.WriteLine(s1);
             Console.WriteLine(s2);
             Console.WriteLine(s3);

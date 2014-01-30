@@ -18,12 +18,5 @@ namespace AsanaNet
         public AsanaWorkspace[] Workspaces      { get; private set; }
 
         // ------------------------------------------------------
-
-        public bool IsObjectLocal { get { return ID == 0; } }
-
-        public void Complete()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

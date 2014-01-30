@@ -45,14 +45,6 @@ namespace AsanaNet
 
         // ------------------------------------------------------
 
-        //public bool IsObjectLocal { get { return true; } }
-        public bool IsObjectLocal { get { return ID == 0; } }
-
-        public void Complete()
-        {
-            throw new NotImplementedException();
-        }
-
         internal AsanaProject()
         {
         }
@@ -88,20 +80,20 @@ namespace AsanaNet
             SetAsReferenceObject();
         }
 
-        public override Task Refresh()
-        {
-            return Host.GetProjectById(ID, project =>
-            {
-                Name = (project as AsanaProject).Name;
-                CreatedAt = (project as AsanaProject).CreatedAt;
-                ModifiedAt = (project as AsanaProject).ModifiedAt;
-                Notes = (project as AsanaProject).Notes;
-                Archived = (project as AsanaProject).Archived;
-                Workspace = (project as AsanaProject).Workspace;
-                Followers = (project as AsanaProject).Followers;
-                Team = (project as AsanaProject).Team;
-                Color = (project as AsanaProject).Color;
-            });
-        }
+//        public override Task Refresh()
+//        {
+//            return Host.GetProjectById(ID, project =>
+//            {
+//                Name = (project as AsanaProject).Name;
+//                CreatedAt = (project as AsanaProject).CreatedAt;
+//                ModifiedAt = (project as AsanaProject).ModifiedAt;
+//                Notes = (project as AsanaProject).Notes;
+//                Archived = (project as AsanaProject).Archived;
+//                Workspace = (project as AsanaProject).Workspace;
+//                Followers = (project as AsanaProject).Followers;
+//                Team = (project as AsanaProject).Team;
+//                Color = (project as AsanaProject).Color;
+//            });
+//        }
     }
 }

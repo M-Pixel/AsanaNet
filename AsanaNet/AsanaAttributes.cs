@@ -13,7 +13,7 @@ namespace AsanaNet
         Omit
     }
 
-    [System.AttributeUsage(System.AttributeTargets.Property, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     internal class AsanaDataAttribute : Attribute
     {
         public string Name { get; private set; }

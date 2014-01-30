@@ -28,8 +28,6 @@ namespace AsanaNet
 
         // ------------------------------------------------------
 
-        public bool IsObjectLocal { get { return ID == 0; } }
-
         public void Complete()
         {
             throw new NotImplementedException();

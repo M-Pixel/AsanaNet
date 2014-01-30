@@ -57,11 +57,26 @@ namespace AsanaNet
         /// <returns></returns>
         static private T[] SafeAssignArray<T>(Dictionary<string, object> source, string name, Asana host)
         {
+            TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
+
             T[] value = null;
 
             if (source.ContainsKey(name) && source[name] != null)
             {
-                throw new NotImplementedException();
+                var obj = source[name] as List<object>;
+                var outputList = new List<T>();
+
+                foreach (var element in obj)
+                {
+                    if (converter.CanConvertFrom(typeof(string)) && !string.IsNullOrWhiteSpace(element.ToString()))
+                    {
+                        outputList.Add((T)converter.ConvertFromString(element.ToString()));
+                    }
+                }
+
+                value = outputList.ToArray();
+
+//                throw new NotImplementedException();
             }
 
             return value;
@@ -81,7 +96,9 @@ namespace AsanaNet
             if (source.ContainsKey(name) && source[name] != null)
             {
                 var obj = source[name] as Dictionary<string, object>;
-                value = (T)AsanaObject.Create(typeof(T));
+                // try from cache
+                var thisId = (Int64) obj["id"];
+                value = (T)AsanaObject.Create(typeof(T), thisId, host);
                 Parsing.Deserialize(obj, (value as AsanaObject), host);
             }
 
@@ -106,6 +123,7 @@ namespace AsanaNet
                 value = new T[list.Count];
                 for (int i = 0; i < list.Count; ++i)
                 {
+                    // TODO: try from cache
                     T newObj = (T)AsanaObject.Create(typeof(T));
                     Parsing.Deserialize(list[i] as Dictionary<string, object>, (newObj as AsanaObject), host);
                     value[i] = newObj;
@@ -122,50 +140,50 @@ namespace AsanaNet
         /// <param name="obj"></param>
         static internal void Deserialize(Dictionary<string, object> data, AsanaObject obj, Asana host)
         {
-            foreach(var p in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            foreach(var objectProperty in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                if (p.Name == "Host")
+                if (objectProperty.Name == "Host")
                 {
                     if (obj.Host != host)
-                        p.SetValue(obj, host, new object[] { });
+                        objectProperty.SetValue(obj, host, new object[] { });
                     continue;
                 }
 
                 try
                 {
-                    var cas = p.GetCustomAttributes(typeof(AsanaDataAttribute), false);
-                    if (cas.Length == 0)
+                    var thisAttributes = objectProperty.GetCustomAttributes(typeof(AsanaDataAttribute), false);
+                    if (thisAttributes.Length == 0)
                         continue;
 
-                    AsanaDataAttribute ca = cas[0] as AsanaDataAttribute;
+                    AsanaDataAttribute thisAttribute = thisAttributes[0] as AsanaDataAttribute;
 
-                    if(!data.ContainsKey(ca.Name))
+                    if(!data.ContainsKey(thisAttribute.Name))
                         continue;
 
-                    if (p.PropertyType == typeof(string))
+                    if (objectProperty.PropertyType == typeof(string))
                     {
-                        p.SetValue(obj, SafeAssignString(data, ca.Name), null);
+                        objectProperty.SetValue(obj, SafeAssignString(data, thisAttribute.Name), null);
                     }
                     else
                     {
-                        Type t = p.PropertyType.IsArray ? p.PropertyType.GetElementType() : p.PropertyType;
+                        Type type = objectProperty.PropertyType.IsArray ? objectProperty.PropertyType.GetElementType() : objectProperty.PropertyType;
                         MethodInfo method = null;
-                        if (typeof(AsanaObject).IsAssignableFrom(t))
-                            method = typeof(Parsing).GetMethod(p.PropertyType.IsArray ? "SafeAssignAsanaObjectArray" : "SafeAssignAsanaObject", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new Type[] { t });
+                        if (typeof(AsanaObject).IsAssignableFrom(type))
+                            method = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "SafeAssignAsanaObjectArray" : "SafeAssignAsanaObject", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
                         else
-                            method = typeof(Parsing).GetMethod(p.PropertyType.IsArray ? "SafeAssignArray" : "SafeAssign", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new Type[] { t });
+                            method = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "SafeAssignArray" : "SafeAssign", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
 
-                        var methodResult = method.Invoke(null, new object[] { data, ca.Name, host });
+                        var methodResult = method.Invoke(null, new object[] { data, thisAttribute.Name, host });
 
                         // this check handle base-class properties
-                        if (p.DeclaringType != obj.GetType())
+                        if (objectProperty.DeclaringType != obj.GetType())
                         {
-                             var p2 = p.DeclaringType.GetProperty(p.Name);
+                            var p2 = objectProperty.DeclaringType.GetProperty(objectProperty.Name);
                             p2.SetValue(obj, methodResult, null);
                         }
                         else
                         {
-                            p.SetValue(obj, methodResult, null);
+                            objectProperty.SetValue(obj, methodResult, null);
                         }
                     }
                 }
@@ -178,7 +196,7 @@ namespace AsanaNet
         //static internal T SetValueOnBaseType<T>
 
         /// <summary>
-        /// Deserializes a dictionary based on AsanaDataAttributes
+        /// Serializes a dictionary based on AsanaDataAttributes
         /// </summary>
         /// <param name="data"></param>
         /// <param name="obj"></param>

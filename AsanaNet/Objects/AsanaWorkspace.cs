@@ -19,18 +19,28 @@ namespace AsanaNet
         [AsanaDataAttribute("email_domains")]
         public string[] EmailDomains { get; private set; }
 
-        // ------------------------------------------------------
-
-        public bool IsObjectLocal { get { return ID == 0; } }
-
-        public void Complete()
+        public Task<AsanaObjectCollection<AsanaProject>> GetProjects(string optFields = null)
         {
-            throw new NotImplementedException();
+            return Host.GetProjectsInWorkspace(this, optFields);
+        }
+        public Task<AsanaObjectCollection<AsanaTag>> GetTags(string optFields = null)
+        {
+            return Host.GetTagsInWorkspace(this, optFields);
+        }
+        public Task<AsanaObjectCollection<AsanaUser>> GetUsers(string optFields = null)
+        {
+            return Host.GetUsersInWorkspace(this, optFields);
+        }
+        public Task<AsanaObjectCollection<AsanaTask>> GetTasks(AsanaUser user, string optFields = null)
+        {
+            return Host.GetTasksInWorkspace(this, user, optFields);
         }
 
-        static public implicit operator AsanaWorkspace(Int64 ID)
+        // ------------------------------------------------------
+
+        static public implicit operator AsanaWorkspace(Int64 id)
         {
-            return Create(typeof(AsanaWorkspace), ID) as AsanaWorkspace;
+            return Create(typeof(AsanaWorkspace), id) as AsanaWorkspace;
         }
 
         public async override Task Refresh()

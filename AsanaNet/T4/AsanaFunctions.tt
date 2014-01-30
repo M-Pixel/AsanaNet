@@ -5,6 +5,7 @@
 <#
  System.Xml.XmlDocument configurationData = new System.Xml.XmlDocument();
  configurationData.Load(@"AsanaNet/T4/AsanaFunctionDefinitions.xml");
+ // 
  System.Xml.XmlNodeList functionList = configurationData.GetElementsByTagName("Function");
  System.Xml.XmlNodeList associationList = configurationData.GetElementsByTagName("Association");
  
@@ -56,6 +57,7 @@ foreach (System.Xml.XmlNode function in functionList)
 #>
 using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 /*
 * THIS FILE IS GENERATED! DO NOT EDIT!
 * REFER TO AsanaFunctionDefinitions.xml
@@ -69,7 +71,7 @@ namespace AsanaNet
 			foreach (System.Xml.XmlNode function in functionList)
 			{		
 		#>
-	<#=function.Attributes["name"].Value#>,
+	<#= function.Attributes["name"].Value #>,
 		<#
 			} 
 		#>
@@ -112,163 +114,37 @@ namespace AsanaNet
 			bool.TryParse(function.Attributes["collection"].Value, out isCollection);
 			string packMethodString = isCollection ? "PackAndSendResponseCollection" : "PackAndSendResponse";
 			string responseTypeString = isCollection ? "AsanaCollectionResponseEventHandler" : "AsanaResponseEventHandler";
+			string objectType = isCollection ? "AsanaObjectCollection<"+function.Attributes["return"].Value+">" : function.Attributes["return"].Value;
 #>
-			public Task <#= function.Attributes["name"].Value #>(<#= parameterStringWithType #><#= secondArgumentComma #><#=responseTypeString#> callback)
+			public async Task<<#= objectType #>> <#= function.Attributes["name"].Value #>(<#= parameterStringWithType #><#= secondArgumentComma #>string optFields = null, bool missCache = false<#= isCollection ? ", bool missCollectionElementsCache = false" : "" #>)
 			{
-				var request = GetBaseRequest(AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>)<#=parameterStringNoType#>);
-				return request.Go((o, h) => <#=packMethodString#><<#= function.Attributes["return"].Value #>>(o, callback), ErrorCallback);
-			}
-<#
+				string cachePath = <# if (function.Attributes["parameters"].Value != "Int64"){ 
+				#>GetAsanaPartUri(AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>)<#=parameterStringNoType#>); 
+				<# } else { #>string.Format(new PropertyFormatProvider(), "{0}"<#= parameterStringNoType #>);<# } #>
 
-			if(!isCollection)
-			{
-			#>
-			public async Task<<#= function.Attributes["return"].Value #>> <#= function.Attributes["name"].Value #>(<#= parameterStringWithType #>)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>)<#=parameterStringNoType#>);
+                var cachedObject = (<#= objectType #>) _objectCache.Get(cachePath);
+<# //if(!isCollection) { #>
+                if (!missCache)
+                {
+                    if (cachedObject != null)
+                        return cachedObject;
+                }
+<# //} #>
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>), new Dictionary<string,object>{{"opt_fields", optFields}}<#=parameterStringNoType#>);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>)<#=parameterStringNoType#>);
+
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>), uri);
-                return AsanaRequest.GetResponse<<#= function.Attributes["return"].Value #>>(response, this);
+                var output = AsanaRequest.GetResponse<#= isCollection ? "Collection" : "" #>(response, this, cachedObject<#= isCollection ? ", !missCollectionElementsCache" : "" #>);
+				_objectCache.Set(cachePath, output);
+				return output;
 			}
-			<#
-			}
-			else
-			{
-			#>
-			public async Task<AsanaObjectCollection<<#= function.Attributes["return"].Value #>>> <#= function.Attributes["name"].Value #>(<#= parameterStringWithType #>)
-			{
-				var uri = GetBaseUri(AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>)<#=parameterStringNoType#>);
-                var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>), uri);
-                return AsanaRequest.GetResponseCollection<<#= function.Attributes["return"].Value #>>(response, this);
-			}
-			<#
-			}
-			#>
 
-
-<#		} 
+<#		}
 #>
-
-
-<#
-foreach (KeyValuePair<string, List<System.Xml.XmlNode>> functions in functionByParams)
-{
-#>
-
-			public Task Get<AsanaT>(<#=functions.Key#> callback) where AsanaT : AsanaObject
-			{
-				AsanaRequest request = default(AsanaRequest);
-				<#
-				foreach(System.Xml.XmlNode function in functions.Value)
-				{
-
-					// REDUNDANT, PLEASE MAKE MORE OPTIMAL (START)
-				
-					string[] parameters = function.Attributes["parameters"].Value.Split(',');
-					string parameterStringWithType = "";
-					string parameterStringNoType = "";
-					string secondArgumentComma = "";
-					for(int i = 0; i < parameters.Length; ++i)
-					{
-						if(!string.IsNullOrWhiteSpace(parameters[i]))
-						{
-							if(i < parameters.Length-1)
-							{
-								parameterStringWithType += parameters[i] + " arg" + (i+1) + ", ";
-							}
-							else
-							{
-								parameterStringWithType += parameters[i] + " arg" + (i+1);
-							}
-							parameterStringNoType += ", arg" + (i+1);
-						}
-						if(!string.IsNullOrWhiteSpace(parameterStringWithType))
-						{
-							secondArgumentComma = ", ";
-						}
-					}
-			
-					bool isCollection = false;
-					bool.TryParse(function.Attributes["collection"].Value, out isCollection);
-					string packMethodString = isCollection ? "PackAndSendResponseCollection" : "PackAndSendResponse";
-					string responseTypeString = isCollection ? "AsanaCollectionResponseEventHandler" : "AsanaResponseEventHandler";
-
-					// REDUNDANT END
-
-				#>
-				
-				if(typeof(AsanaT) == typeof(<#= function.Attributes["return"].Value #>))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>)<#=parameterStringNoType#>);
-					return request.Go((o, h) => <#=packMethodString#><<#= function.Attributes["return"].Value #>>(o, callback), ErrorCallback);
-				}
-
-				<#
-				}
-				#>
-				
-                throw new TypeAccessException("Unknown type for this request: " + typeof(AsanaT).Name);
-			}
-
-			public Task Get(Type AsanaT, <#=functions.Key#> callback)
-			{
-				AsanaRequest request = default(AsanaRequest);
-				<#
-				foreach(System.Xml.XmlNode function in functions.Value)
-				{
-
-					// REDUNDANT, PLEASE MAKE MORE OPTIMAL (START)
-				
-					string[] parameters = function.Attributes["parameters"].Value.Split(',');
-					string parameterStringWithType = "";
-					string parameterStringNoType = "";
-					string secondArgumentComma = "";
-					for(int i = 0; i < parameters.Length; ++i)
-					{
-						if(!string.IsNullOrWhiteSpace(parameters[i]))
-						{
-							if(i < parameters.Length-1)
-							{
-								parameterStringWithType += parameters[i] + " arg" + (i+1) + ", ";
-							}
-							else
-							{
-								parameterStringWithType += parameters[i] + " arg" + (i+1);
-							}
-							parameterStringNoType += ", arg" + (i+1);
-						}
-						if(!string.IsNullOrWhiteSpace(parameterStringWithType))
-						{
-							secondArgumentComma = ", ";
-						}
-					}
-			
-					bool isCollection = false;
-					bool.TryParse(function.Attributes["collection"].Value, out isCollection);
-					string packMethodString = isCollection ? "PackAndSendResponseCollection" : "PackAndSendResponse";
-					string responseTypeString = isCollection ? "AsanaCollectionResponseEventHandler" : "AsanaResponseEventHandler";
-
-					// REDUNDANT END
-
-				#>
-				
-				if(AsanaT == typeof(<#= function.Attributes["return"].Value #>))
-				{
-					request = GetBaseRequest(AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>)<#=parameterStringNoType#>);
-					return request.Go((o, h) => <#=packMethodString#><<#= function.Attributes["return"].Value #>>(o, callback), ErrorCallback);
-				}
-
-				<#
-				}
-				#>
-				
-                throw new TypeAccessException("Unknown type for this request: " + AsanaT.Name);
-			}
-<#
-}
-#>
-
-
-	}
+		}
 
 		// Binds the enums, formations and methods
 		public partial class AsanaFunction
