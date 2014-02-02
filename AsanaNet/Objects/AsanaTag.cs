@@ -6,7 +6,7 @@ using System.Text;
 namespace AsanaNet
 {
     [Serializable]
-    public class AsanaTag : AsanaObject, IAsanaData
+    public partial class AsanaTag : AsanaObject, IAsanaData
     {
         [AsanaDataAttribute     ("notes",       SerializationFlags.Optional)]
         public string           Notes           { get; set; }
@@ -18,10 +18,10 @@ namespace AsanaNet
         public AsanaDateTime    CreatedAt       { get; private set; }
 
         [AsanaDataAttribute     ("followers",   SerializationFlags.Omit)]
-        public AsanaUser[]      Followers       { get; private set; }
+        public AsanaObjectCollection<AsanaUser> Followers { get; private set; }
 
         [AsanaDataAttribute     ("workspace",   SerializationFlags.Required, "ID")]
-        public AsanaWorkspace   Workspace       { get; private set; }
+        public AsanaWorkspace   Workspace       { get; internal set; }
 
         [AsanaDataAttribute     ("color",       SerializationFlags.Omit)]
         public string           Color           { get; private set; }
@@ -37,7 +37,7 @@ namespace AsanaNet
         {
             return Create(typeof(AsanaTag), ID) as AsanaTag;
         }
-        
+        /*
         public AsanaTag(AsanaWorkspace workspace, Int64 id = 0) 
         {
             ID = id;
@@ -50,5 +50,6 @@ namespace AsanaNet
         internal AsanaTag()
         {
         }
+         * */
     }
 }

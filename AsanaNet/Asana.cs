@@ -37,7 +37,7 @@ namespace AsanaNet
         /// <summary>
         /// An error callback for the outside world
         /// </summary>
-        private Action<string, string, string> _errorCallback;
+        private Action<string, string, string, string> _errorCallback;
 
         internal readonly HttpClient _baseHttpClient = new HttpClient();
 
@@ -77,7 +77,7 @@ namespace AsanaNet
         /// Creates a new Asana entry point.
         /// </summary>
 		/// <param name="apiKeyOrBearerToken">The API key (for Basic authentication) or Bearer Token (for OAuth authentication) for the account we intend to access</param>
-		public Asana(string apiKeyOrBearerToken, AuthenticationType authType, Action<string, string, string> errorCallback, ICache cache = null, AsanaCacheLevel defaultCacheLevel = AsanaCacheLevel.UseExisting)
+		public Asana(string apiKeyOrBearerToken, AuthenticationType authType, Action<string, string, string, string> errorCallback, ICache cache = null, AsanaCacheLevel defaultCacheLevel = AsanaCacheLevel.UseExisting)
         {   
             _baseUrl = "https://app.asana.com/api/1.0";
             _errorCallback = errorCallback;
@@ -118,7 +118,7 @@ namespace AsanaNet
             }
             return new Uri(uri);
         }
-        private string GetAsanaPartUri(AsanaFunction function, params object[] obj)
+        internal static string GetAsanaPartUri(AsanaFunction function, params object[] obj)
         {
             return string.Format(new PropertyFormatProvider(), function.Url, obj);
         }
@@ -156,9 +156,9 @@ namespace AsanaNet
         /// The callback for response errors
         /// </summary>
         /// <param name="error"></param>
-        internal void ErrorCallback(string requestString, string error, string responseContent)
+        internal void ErrorCallback(string method, string requestString, string statusCode, string error)
         {
-            _errorCallback(requestString, error, responseContent);
+            _errorCallback(method, requestString, statusCode, error);
         }
 
         /// <summary>
@@ -180,18 +180,18 @@ namespace AsanaNet
 
             var uri = GetBaseUriWithParams(func, data, obj);
             var response = await AsanaRequest.GoAsync(this, func, uri);
-            return AsanaRequest.GetResponse<T>(response, this);
-
+            return AsanaRequest.GetResponse(response, this, obj); // will also update the object
+            
             // TODO: serialize to JSON
             // http://stackoverflow.com/questions/12458532/suppress-requiredattribute-validation-for-the-jsonmediatypeformatter-in-asp-net
             // http://www.asp.net/web-api/overview/web-api-clients/calling-a-web-api-from-a-net-client
         }
-
+        /*
         /// <summary>
         /// Tells asana to delete the specified object
         /// </summary>
         /// <param name="obj"></param>
-        internal async Task<T> Delete<T>(T obj) where T : AsanaObject
+        internal Task<T> Delete<T>(T obj) where T : AsanaObject
         {
             AsanaFunction func;
 
@@ -208,11 +208,9 @@ namespace AsanaNet
 
             if (Object.ReferenceEquals(func, null)) throw new NotImplementedException("This object cannot delete itself.");
 
-            var uri = GetBaseUriWithParams(func, null, obj);
-            var response = await AsanaRequest.GoAsync(this, func, uri);
-            return AsanaRequest.GetResponse<T>(response, this);
+            return Save(obj, func, new Dictionary<string, object>(0));
         }
-
+        */
         #endregion
     }
     public enum AsanaCacheLevel
@@ -220,6 +218,7 @@ namespace AsanaNet
         Ignore = 0, // Always fetch new objects
         FillExisting = 1, // If Possible
         UseExisting = 2, // If Possible
+        UseExistingOrNull = 3, 
         Default = AsanaCacheLevel.UseExisting
     }
 }

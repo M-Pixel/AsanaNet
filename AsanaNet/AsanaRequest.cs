@@ -52,7 +52,7 @@ namespace AsanaNet
                 if (function.Method != "GET" && content == null)
                 {
 //                    content = new StringContent(null, Encoding.UTF8, "application/json");
-                    content = new StringContent("");
+                    content = new StringContent(String.Empty);
                     content.Headers.ContentType =
                         new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
                 }
@@ -77,12 +77,12 @@ namespace AsanaNet
                 {
                     response.EnsureSuccessStatusCode();
 #if DEBUG
-                    asana.ErrorCallback(uri.AbsoluteUri, response.StatusCode.ToString(), "");
+                    asana.ErrorCallback(function.Method, uri.AbsoluteUri, response.StatusCode.ToString(), "SUCCESS");
 #endif
                 }
                 catch (HttpRequestException e)
                 {
-                    asana.ErrorCallback(uri.AbsoluteUri, response.StatusCode.ToString(), e.Message);
+                    asana.ErrorCallback(function.Method, uri.AbsoluteUri, response.StatusCode.ToString(), e.Message);
 
                     if (!ReferenceEquals(response.Headers.RetryAfter, null) && response.Headers.RetryAfter.Delta.HasValue)
                     {
@@ -112,7 +112,9 @@ namespace AsanaNet
             var outputObjectDict = Asana.GetDataAsDict(responseContent);
             AsanaObject outputObject = cachedObject ?? AsanaObject.Create(typeof (T));
 
-            //                var thisId = (Int64)outputObjectDict["id"];
+            // make sure to set the ID first so that the cache references can be valid
+            if (outputObjectDict.ContainsKey("id"))
+                outputObject.ID = (Int64)outputObjectDict["id"];
 
             //          var outputObject = AsanaObject.Create(typeof(T));
             //                outputObject = AsanaObject.Create(typeof(T), thisId, asana);

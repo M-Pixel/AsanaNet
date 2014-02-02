@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace AsanaNet
 {
     [Serializable]
-    public class AsanaProject : AsanaObject, IAsanaData
+    public partial class AsanaProject : AsanaObject, IAsanaData
     {
         [AsanaDataAttribute("name", SerializationFlags.Required)] //
         public string Name { get; set; }
@@ -26,10 +26,10 @@ namespace AsanaNet
         public bool Archived { get; private set; }
 
         [AsanaDataAttribute("workspace", SerializationFlags.Optional, "ID")] //
-        public AsanaWorkspace Workspace { get; private set; }
+        public AsanaWorkspace Workspace { get; internal set; }
 
         [AsanaDataAttribute("followers", SerializationFlags.Optional)] //
-        public AsanaUser[] Followers { get; private set; }
+        public AsanaObjectCollection<AsanaUser> Followers { get; private set; }
 
         [AsanaDataAttribute("team", SerializationFlags.Optional, "ID")] //
         public AsanaTeam Team { get; private set; }
@@ -41,19 +41,19 @@ namespace AsanaNet
         public bool Public { get; private set; }
 
         [AsanaDataAttribute("members", SerializationFlags.Omit)]
-        public AsanaUser[] Members { get; private set; }
+        public AsanaObjectCollection<AsanaUser> Members { get; private set; }
 
         // ------------------------------------------------------
-
+        /*
         internal AsanaProject()
         {
         }
-
+        */
         static public implicit operator AsanaProject(Int64 ID)
         {
             return Create(typeof(AsanaProject), ID) as AsanaProject;
         }
-
+        /*
         public AsanaProject(Int64 id = 0)
         {
             ID = id;
@@ -95,5 +95,6 @@ namespace AsanaNet
 //                Color = (project as AsanaProject).Color;
 //            });
 //        }
+         * */
     }
 }

@@ -4,7 +4,7 @@ Name  : AsanaFunctionDefinitions.xml
 Descr : Asana functions list
 API   : 1.0
 Auth  : Antony Woods
-Copyright 2012 Antony WOods
+Copyright 2012 Antony Woods
 -->
 <AsanaFunctions api="1.0">
 
@@ -27,6 +27,7 @@ Copyright 2012 Antony WOods
   <Function method="GET" name="GetSubtasksInTask"       formation="/tasks/{0:ID}/subtasks"                    parameters="AsanaTask"                    return="AsanaTask"          collection="true"   />
   <Function method="GET" name="GetStoriesInTask"        formation="/tasks/{0:ID}/stories"                     parameters="AsanaTask"                    return="AsanaStory"         collection="true"   />
   <Function method="GET" name="GetProjectsOnATask"      formation="/tasks/{0:ID}/projects"                    parameters="AsanaTask"                    return="AsanaProject"       collection="true"   />
+  <Function method="GET" name="GetTagsOnATask"          formation="/tasks/{0:ID}/tags"                        parameters="AsanaTask"                    return="AsanaTag"           collection="true"   />
   <Function method="GET" name="GetTasksByTag"           formation="/tags/{0:ID}/tasks"                        parameters="AsanaTag"                     return="AsanaTask"          collection="true"   />
   <Function method="GET" name="GetStoryById"            formation="/stories/{0}"                              parameters="Int64"                        return="AsanaStory"         collection="false"  />
   <Function method="GET" name="GetProjectById"          formation="/projects/{0}"                             parameters="Int64"                        return="AsanaProject"       collection="false"  />
@@ -35,26 +36,29 @@ Copyright 2012 Antony WOods
   <Function method="GET" name="GetTeamsInWorkspace"     formation="/organizations/{0:ID}/teams"               parameters="AsanaWorkspace"               return="AsanaTeam"          collection="true"   />
 
   <!-- POST Functions -->                                                                                                                          
-  <Function method="POST" name="CreateWorkspaceTask"    formation="/tasks"                                    parameters=""                                                                             />
-  <Function method="POST" name="CreateTaskSubtask"      formation="/tasks/{0:Parent}/subtasks"                parameters="AsanaTask"                                                                    />
-  <Function method="POST" name="SetParentTask"          formation="/tasks/{0:ID}/setParent"                   parameters="AsanaTask"                                                                    />
-  <Function method="POST" name="AddProjectToTask"       formation="/tasks/{0:ID}/addProject"                  parameters="AsanaTask"                                                                    />
-  <Function method="POST" name="RemoveProjectFromTask"  formation="/tasks/{0:ID}/removeProject"               parameters="AsanaTask"                                                                    />
-  <Function method="POST" name="AddStoryToTask"         formation="/tasks/{0:Target}/stories"                 parameters="AsanaTask"                                                                    />
-  <Function method="POST" name="AddTagToTask"           formation="/tasks/{0:ID}/addTag"                      parameters="AsanaTask"                                                                    />
-  <Function method="POST" name="RemoveTagFromTask"      formation="/tasks/{0:ID}/removeTag"                   parameters="AsanaTask"                                                                    />
-  <Function method="POST" name="CreateWorkspaceProject" formation="/projects"                                 parameters="AsanaWorkspace, AsanaTeam"                                                    />
-  <Function method="POST" name="CreateWorkspaceTag"     formation="/tags"                                     parameters="AsanaWorkspace"                                                               />
-
+  <Function method="POST" name="CreateTask"           formation="/tasks"                                    parameters="AsanaWorkspace"               modifies="AsanaTask"                              />
+  <Function method="POST" name="CreateProject"        formation="/projects"                                 parameters="AsanaWorkspace, AsanaTeam"    modifies="AsanaProject"     addTo="Projects"      />
+  <Function method="POST" name="CreateTag"            formation="/tags"                                     parameters="AsanaWorkspace"               modifies="AsanaTag"         addTo="Tags"          />
+  <Function method="POST" name="CreateStory"          formation="/tasks/{0:Target}/stories"                 parameters="AsanaTask"                    modifies="AsanaStory"       addTo="Stories" setProperty="Target" />
+  <Function method="POST" name="CreateSubtask"        formation="/tasks/{0:Parent}/subtasks"                parameters="AsanaTask"                    modifies="AsanaTask"        addTo="Tasks"   setProperty="Parent" />
+  <Function method="POST" name="SetParent"            formation="/tasks/{0:ID}/setParent"                   parameters="AsanaTask"                    modifies="AsanaTask"        paramName="parent"    />
+  <Function method="POST" name="AddProject"           formation="/tasks/{0:ID}/addProject"                  parameters="AsanaTask"                    modifies="AsanaProject"     addTo="Projects"      />
+  <Function method="POST" name="RemoveProject"        formation="/tasks/{0:ID}/removeProject"               parameters="AsanaTask"                    modifies="AsanaProject"     removeFrom="Projects" />
+  <Function method="POST" name="AddTag"               formation="/tasks/{0:ID}/addTag"                      parameters="AsanaTask"                    modifies="AsanaTag"         addTo="Tags"          />
+  <Function method="POST" name="RemoveTag"            formation="/tasks/{0:ID}/removeTag"                   parameters="AsanaTask"                    modifies="AsanaTag"         removeFrom="Tags"     />
+  <Function method="POST" name="AddAFollower"         formation="/tasks/{0:ID}/addFollowers"                parameters="AsanaTask"                    modifies="AsanaUser"        addTo="Followers"     />
+  <Function method="POST" name="RemoveAFollower"      formation="/tasks/{0:ID}/removeFollowers"             parameters="AsanaTask"                    modifies="AsanaUser"        removeFrom="Followers"/>  
+  
   <!-- PUT Functions -->                                                                                                                              
-  <Function method="PUT" name="UpdateTask"              formation="/tasks/{0:ID}"                             parameters="AsanaTask"                                                                    />
-  <Function method="PUT" name="UpdateTag"               formation="/tags/{0:ID}"                              parameters="AsanaTag"                                                                     />
-  <Function method="PUT" name="UpdateProject"           formation="/projects/{0:ID}"                          parameters="AsanaProject"                                                                 />
-  <Function method="PUT" name="UpdateWorkspace"         formation="/workspaces/{0:ID}"                        parameters="AsanaWorkspace"                                                               />
+  <Function method="PUT" name="UpdateTask"            formation="/tasks/{0:ID}"                             parameters="AsanaTask"                                                                    />
+  <Function method="PUT" name="UpdateTag"             formation="/tags/{0:ID}"                              parameters="AsanaTag"                                                                     />
+  <Function method="PUT" name="UpdateProject"         formation="/projects/{0:ID}"                          parameters="AsanaProject"                                                                 />
+  <Function method="PUT" name="UpdateWorkspace"       formation="/workspaces/{0:ID}"                        parameters="AsanaWorkspace"                                                               />
 
   <!-- DELETE Functions -->
-  <Function method="DELETE" name="DeleteTask"           formation="/tasks/{0:ID}"                             parameters="AsanaTask"                                                                    />
-  <Function method="DELETE" name="DeleteProject"        formation="/projects/{0:ID}"                          parameters="AsanaProject"                                                                 />
+  <Function method="DELETE" name="DeleteTask"         formation="/tasks/{0:ID}"                             parameters="AsanaTask"                    modifies="AsanaTask"        removeFrom="Parent.Tasks"  />
+  <Function method="DELETE" name="DeleteProject"      formation="/projects/{0:ID}"                          parameters="AsanaProject"                 modifies="AsanaProject"     removeFrom="Workspace.Projects"  />
+  <Function method="DELETE" name="DeleteStory"        formation="/projects/{0:ID}"                          parameters="AsanaStory"                   modifies="AsanaStory"       removeFrom="Target.Stories"  />
 
   <!--
     Associations define what is essentially a novelty feature within the application.
@@ -62,10 +66,10 @@ Copyright 2012 Antony WOods
     Alternatively, it will be updating an existing object.
   -->
   <Association type="AsanaWorkspace" create=""                          update="UpdateWorkspace"   delete="" />
-  <Association type="AsanaTask"      create="CreateWorkspaceTask"       update="UpdateTask"        delete="DeleteTask" />
-  <Association type="AsanaSubtask"   create="CreateTaskSubtask"         update="UpdateTask"        delete="DeleteTask" />
-  <Association type="AsanaProject"   create="CreateWorkspaceProject"    update="UpdateProject"     delete="DeleteProject" />
-  <Association type="AsanaTag"       create="CreateWorkspaceTag"        update="UpdateTag"         delete="" />
-  <Association type="AsanaStory"     create="AddStoryToTask"            update=""                  delete="" />
+  <Association type="AsanaTask"      create="CreateTask"       update="UpdateTask"        delete="DeleteTask" />
+  <!--<Association type="AsanaSubtask"   create="CreateSubtask"         update="UpdateTask"        delete="DeleteTask" />-->
+  <Association type="AsanaProject"   create="CreateProject"    update="UpdateProject"     delete="DeleteProject" />
+  <Association type="AsanaTag"       create="CreateTag"        update="UpdateTag"         delete="" />
+  <Association type="AsanaStory"     create="CreateStory"            update=""                  delete="" />
 
 </AsanaFunctions>

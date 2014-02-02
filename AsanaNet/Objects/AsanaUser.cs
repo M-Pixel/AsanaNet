@@ -6,7 +6,7 @@ using System.Text;
 namespace AsanaNet
 {
     [Serializable]
-    public class AsanaUser : AsanaObject, IAsanaData
+    public partial class AsanaUser : AsanaObject, IAsanaData
     {
         [AsanaDataAttribute("name")]
         public string           Name            { get; private set; }
@@ -15,7 +15,7 @@ namespace AsanaNet
         public string           Email           { get; private set; }
 
         [AsanaDataAttribute("workspaces")]
-        public AsanaWorkspace[] Workspaces      { get; private set; }
+        public AsanaObjectCollection<AsanaWorkspace> Workspaces { get; private set; }
 
         // ------------------------------------------------------
     }

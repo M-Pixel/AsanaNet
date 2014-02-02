@@ -20,6 +20,7 @@ namespace AsanaNet
         void Flush();
         object Get(string key);
         void Remove(string key);
+        List<T> GetAllOfType<T>(string keyStartsWith = null);
     }
     public class MemCache : ICache
     {
@@ -36,6 +37,25 @@ namespace AsanaNet
         public void SetRegion(string name)
         {
             Prefix = name;
+        }
+
+        public List<T> GetAllOfType<T>(string keyStartsWith = null)
+        {
+            var objectsOfT = new List<T>();
+
+            if (keyStartsWith != null)
+                foreach (var entry in MemoryCache.Where(entry => entry.Key.StartsWith(Prefix + keyStartsWith)))
+                {
+                    if(entry.Value.GetType() == typeof(T))
+                        objectsOfT.Add((T) entry.Value);
+                }
+            else
+                foreach (var entry in MemoryCache.Where(entry => entry.Key.StartsWith(Prefix)))
+                {
+                    if (entry.Value.GetType() == typeof(T))
+                        objectsOfT.Add((T) entry.Value);
+                }
+            return objectsOfT;
         }
 
         public string PrefixedKey(string key)

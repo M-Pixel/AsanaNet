@@ -13,16 +13,35 @@ namespace AsanaNet
     public interface IAsanaData
     {
         bool IsObjectLocal { get; }
-        //void Complete();
+    }
+
+    [Serializable]
+    public class AsanaEventedObject : AsanaObject
+    {
+
+    }
+
+    public interface IAsanaSyncable
+    {
+        event AsanaResponseEventHandler SelfRemoved;
+        event AsanaResponseEventHandler SelfChanged;
+        event AsanaResponseEventHandler ChildAdded;
+        event AsanaResponseEventHandler ChildRemoved;
+    }
+
+    enum AsanaExistance
+    {
+        Local = 0,
+        Deleted = -1
     }
 
     [Serializable]
     public abstract class AsanaObject
     {
         [AsanaDataAttribute("id", SerializationFlags.Omit)]
-        public Int64 ID { get; protected set; }
+        public Int64 ID { get; internal set; }
 
-        public Asana Host { get; protected set; }
+        public Asana Host { get; internal set; }
 
         //add event handler here or in separate interface extended
 
@@ -67,7 +86,7 @@ namespace AsanaNet
 
         public void SetAsReferenceObject()
         {
-            SavingCallback(Parsing.Serialize(this, false, false));
+            SavingCallback(Parsing.Serialize(this, false, false, true));
         }
      
         /// <summary>
@@ -238,6 +257,7 @@ namespace AsanaNet
 
     static public class AsanaObjectExtensions
     {
+        /*
         static public Task<T> Save<T>(this T obj, Asana host, AsanaFunction function) where T : AsanaObject
         {
             return host.Save(obj, function);
@@ -254,14 +274,14 @@ namespace AsanaNet
                 throw new NullReferenceException("This AsanaObject does not have a host associated with it so you must specify one when saving.");
             return obj.Host.Save(obj, function);
         }
-
+        */
         static public Task<T> Save<T>(this T obj) where T : AsanaObject
         {
             if (obj.Host == null)
                 throw new NullReferenceException("This AsanaObject does not have a host associated with it so you must specify one when saving.");
             return obj.Host.Save(obj, null);
         }
-
+        /*
         static public Task Delete(this AsanaObject obj, Asana host)
         {
             return host.Delete(obj);
@@ -273,5 +293,6 @@ namespace AsanaNet
                 throw new NullReferenceException("This AsanaObject does not have a host associated with it so you must specify one when saving.");
             return obj.Host.Delete(obj);
         }
+         * */
     }
 }

@@ -5,11 +5,25 @@ using System.Text;
 
 namespace AsanaNet
 {
+    public enum StorySource
+    {
+        web,
+        email,
+        mobile,
+        api,
+        unknown 
+    }
+    public enum StoryType
+    {
+        comment,
+        system
+    }
+
     [Serializable]
-    public class AsanaStory : AsanaObject, IAsanaData
+    public partial class AsanaStory : AsanaObject, IAsanaData
     {
         [AsanaDataAttribute     ("type",        SerializationFlags.Omit)]
-        public string           Type            { get; private set; }
+        public StoryType        Type            { get; private set; }
 
         [AsanaDataAttribute     ("text",        SerializationFlags.Required)]
         public string           Text            { get; set; }
@@ -21,14 +35,15 @@ namespace AsanaNet
         public AsanaDateTime    CreatedAt       { get; private set; }
 
         [AsanaDataAttribute     ("source",      SerializationFlags.Omit)]
-        public string           Source          { get; private set; }
+        public StorySource      Source          { get; private set; }
 
         [AsanaDataAttribute     ("target",      SerializationFlags.Omit)]
-        public AsanaTask        Target          { get; private set; }
+        public AsanaTask        Target          { get; internal set; }
 
         // ------------------------------------------------------
 
-        //
+        ///
+        /*
         internal AsanaStory()
         {
         }
@@ -44,5 +59,6 @@ namespace AsanaNet
             Text    = text;
             Target  = task;
         }
+         * */
     }
 }

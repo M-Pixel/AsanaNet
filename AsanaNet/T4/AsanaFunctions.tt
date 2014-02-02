@@ -4,7 +4,7 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#
  System.Xml.XmlDocument configurationData = new System.Xml.XmlDocument();
- configurationData.Load(@"AsanaNet/T4/AsanaFunctionDefinitions.xml");
+ configurationData.Load(@"AsanaNet/AsanaNet/T4/AsanaFunctionDefinitions.xml");
  // 
  System.Xml.XmlNodeList functionList = configurationData.GetElementsByTagName("Function");
  System.Xml.XmlNodeList associationList = configurationData.GetElementsByTagName("Association");
@@ -116,20 +116,22 @@ namespace AsanaNet
 			string responseTypeString = isCollection ? "AsanaCollectionResponseEventHandler" : "AsanaResponseEventHandler";
 			string objectType = isCollection ? "AsanaObjectCollection<"+function.Attributes["return"].Value+">" : function.Attributes["return"].Value;
 #>
-			public async Task<<#= objectType #>> <#= function.Attributes["name"].Value #>(<#= parameterStringWithType #><#= secondArgumentComma #>string optFields = null, bool missCache = false<#= isCollection ? ", bool missCollectionElementsCache = false" : "" #>)
+			public async Task<<#= objectType #>> <#= function.Attributes["name"].Value #>(<#= parameterStringWithType #><#= secondArgumentComma #>string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default)
 			{
+                if (cacheLevel == AsanaCacheLevel.Default) cacheLevel = this.DefaultCacheLevel;
+
 				string cachePath = <# if (function.Attributes["parameters"].Value != "Int64"){ 
 				#>GetAsanaPartUri(AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>)<#=parameterStringNoType#>); 
 				<# } else { #>string.Format(new PropertyFormatProvider(), "{0}"<#= parameterStringNoType #>);<# } #>
 
-                var cachedObject = (<#= objectType #>) _objectCache.Get(cachePath);
-<# //if(!isCollection) { #>
-                if (!missCache)
+                <#= objectType #> cachedObject = null;
+                <#= !isCollection ? "if (cacheLevel >= AsanaCacheLevel.FillExisting)" : "" #>
+                cachedObject = (<#= objectType #>) _objectCache.Get(cachePath);
+                if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null)
+                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
-<# //} #>
 			    Uri uri;
                 if (optFields != null)
                     uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>), new Dictionary<string,object>{{"opt_fields", optFields}}<#=parameterStringNoType#>);
@@ -137,7 +139,7 @@ namespace AsanaNet
                     uri = GetBaseUri(AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>)<#=parameterStringNoType#>);
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>), uri);
-                var output = AsanaRequest.GetResponse<#= isCollection ? "Collection" : "" #>(response, this, cachedObject<#= isCollection ? ", !missCollectionElementsCache" : "" #>);
+                var output = AsanaRequest.GetResponse<#= isCollection ? "Collection" : "" #>(response, this, cachedObject<#= isCollection ? ", cacheLevel >= AsanaCacheLevel.FillExisting" : "" #>);
 				_objectCache.Set(cachePath, output);
 				return output;
 			}
@@ -157,11 +159,8 @@ namespace AsanaNet
 		#>
 		Functions.Add(Function.<#=function.Attributes["name"].Value#>, new AsanaFunction("<#=function.Attributes["formation"].Value#>", "<#=function.Attributes["method"].Value#>"));
 		<#
-			} 
-		#>
+			}
 
-
-		<#
 			foreach (System.Xml.XmlNode association in associationList)
 			{		
 				string create = association.Attributes["create"].Value;
@@ -190,4 +189,215 @@ namespace AsanaNet
 
 			}
 		}
+
+
+        // add function to the objects
+
+<#
+		foreach (System.Xml.XmlNode function in functionList)
+		{
+			if(function.Attributes["method"].Value != "GET")
+				continue;
+
+			string[] parameters = function.Attributes["parameters"].Value.Split(',');
+
+			string parameterStringWithType = "";
+			string parameterStringNoType = "";
+			string secondArgumentComma = "";
+			for(int i = 1; i < parameters.Length; ++i)
+			{
+				if(!string.IsNullOrWhiteSpace(parameters[i]))
+				{
+					if(i < parameters.Length-1)
+					{
+						parameterStringWithType += parameters[i] + " arg" + (i+1) + ", ";
+					}
+					else
+					{
+						parameterStringWithType += parameters[i] + " arg" + (i+1);
+					}
+					parameterStringNoType += ", arg" + (i+1);
+				}
+				if(!string.IsNullOrWhiteSpace(parameterStringWithType))
+				{
+					secondArgumentComma = ", ";
+				}
+			}
+        
+			bool isCollection = false;
+			bool.TryParse(function.Attributes["collection"].Value, out isCollection);
+			//string packMethodString = isCollection ? "PackAndSendResponseCollection" : "PackAndSendResponse";
+			//string responseTypeString = isCollection ? "AsanaCollectionResponseEventHandler" : "AsanaResponseEventHandler";
+			string objectType = isCollection ? "AsanaObjectCollection<"+function.Attributes["return"].Value+">" : function.Attributes["return"].Value;
+            string justReturnName = function.Attributes["return"].Value.Substring("Asana".Length);
+            justReturnName = justReturnName.EndsWith("y") ? justReturnName.TrimEnd("y".ToCharArray()) + "ies" : justReturnName + "s";
+            if (parameters.Length > 0 && parameters[0].StartsWith("Asana"))
+            {
+#>
+public partial class <#= parameters[0] #> : AsanaObject, IAsanaData
+{
+<#
+if (parameters.Length == 1)
+{
+#>
+	[AsanaDataAttribute     ("<#= justReturnName.ToLowerInvariant() #>",        SerializationFlags.Optional, "ID")]
+    public <#= objectType #> <#= justReturnName #>
+    {
+        get 
+        {
+            var task = Get<#= justReturnName #>(null, AsanaCacheLevel.UseExistingOrNull);
+            return !object.ReferenceEquals(task, null) ? task.Result : null;
+        }
+		private set 
+		{
+            if (!object.ReferenceEquals(value, null))
+            {
+			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>), this);
+			    Host._objectCache.Set(cachePath, value);
+            }
+		}
+    }
+<#
+}
+#>
+    public Task<<#= objectType #>> Get<#= justReturnName #>(<#= parameterStringWithType #><#= secondArgumentComma #>string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default)
+    {
+        if (!object.ReferenceEquals(Host, null))
+            return Host.<#= function.Attributes["name"].Value #>(this<#= parameterStringNoType #>, optFields, cacheLevel);
+        return null;
+    }
+}
+
+<#
+            }
+        }
+
+		foreach (System.Xml.XmlNode function in functionList)
+		{
+			if(function.Attributes["method"].Value == "PUT" || function.Attributes["method"].Value == "GET")
+				continue;
+
+			string[] parameters = function.Attributes["parameters"].Value.Split(',');
+
+			string parameterStringWithType = "";
+			string parameterStringNoType = "";
+			string secondArgumentComma = "";
+			for(int i = 0; i < parameters.Length; ++i)
+			{
+				if(!string.IsNullOrWhiteSpace(parameters[i]))
+				{
+					if(i < parameters.Length-1)
+					{
+						parameterStringWithType += parameters[i] + " arg" + (i+1) + ", ";
+					}
+					else
+					{
+						parameterStringWithType += parameters[i] + " arg" + (i+1);
+					}
+					parameterStringNoType += ", arg" + (i+1);
+				}
+				if(!string.IsNullOrWhiteSpace(parameterStringWithType))
+				{
+					secondArgumentComma = ", ";
+				}
+			}
+        
+			//bool isCollection = false;
+			//bool.TryParse(function.Attributes["collection"].Value, out isCollection);
+			//string packMethodString = isCollection ? "PackAndSendResponseCollection" : "PackAndSendResponse";
+			//string responseTypeString = isCollection ? "AsanaCollectionResponseEventHandler" : "AsanaResponseEventHandler";
+            if (parameters[0].StartsWith("Asana")) //parameters.Length == 1 && 
+            {
+			string objectType = parameters[0];
+            string objectProperty = !ReferenceEquals(function.Attributes["setProperty"], null) ? function.Attributes["setProperty"].Value : objectType.Substring("Asana".Length);
+            string justParam = function.Attributes["modifies"].Value.Substring("Asana".Length).ToLowerInvariant();
+            string justReturnName = function.Attributes["name"].Value; //.Replace("ToTask", "").Replace("FromTask", "").Replace("Task", "").Replace("CreateWorkspaceTag", "CreateTag");
+            //justReturnName = justReturnName.EndsWith("y") ? justReturnName.TrimEnd("y".ToCharArray()) + "ies" : justReturnName + "s";
+if (function.Attributes["method"].Value == "DELETE")
+{
+#>
+public partial class <#= parameters[0] #> : AsanaObject, IAsanaData
+{
+    public Task Delete()
+    {
+        return Host.Save(this, AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>), new Dictionary<string, object>(0))<#
+if (!ReferenceEquals(function.Attributes["addTo"], null) || !ReferenceEquals(function.Attributes["removeFrom"], null)) { 
+#>.ContinueWith(
+            (prevTask) =>
+            {
+                var listsPossiblyContainingThis = Host._objectCache.GetAllOfType<AsanaObjectCollection<<#= parameters[0] #>>>("/");
+                foreach (var list in listsPossiblyContainingThis)
+                {
+                    list.Remove(this);
+                }
+                //if (!ReferenceEquals(<#= !ReferenceEquals(function.Attributes["addTo"], null) ? function.Attributes["addTo"].Value : function.Attributes["removeFrom"].Value #>, null))
+                //    <#= !ReferenceEquals(function.Attributes["addTo"], null) ? function.Attributes["addTo"].Value + ".Add" : function.Attributes["removeFrom"].Value + ".Remove" #>(this);
+<# } #>
+                ID = (Int64) AsanaExistance.Deleted;
+            }, TaskContinuationOptions.NotOnFaulted);
+
+    }
+}
+
+<#
+}
+else if (function.Attributes["name"].Value.StartsWith("Create"))
+{
+#>
+public partial class <#= parameters[0] #> : AsanaObject, IAsanaData
+{
+    public Task <#= justReturnName #>(<#= function.Attributes["modifies"].Value #> arg)
+    {
+        arg.Host = Host;
+        arg.<#= objectProperty #> = this;
+        return Host.Save(arg, AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>))<# //, param
+if (!ReferenceEquals(function.Attributes["addTo"], null) || !ReferenceEquals(function.Attributes["removeFrom"], null)) { 
+#>.ContinueWith(
+            (prevTask) =>
+                {
+                    if (!ReferenceEquals(<#= !ReferenceEquals(function.Attributes["addTo"], null) ? function.Attributes["addTo"].Value : function.Attributes["removeFrom"].Value #>, null))
+                        <#= !ReferenceEquals(function.Attributes["addTo"], null) ? function.Attributes["addTo"].Value + ".Add" : function.Attributes["removeFrom"].Value + ".Remove" #>(arg);
+                }, TaskContinuationOptions.NotOnFaulted)<# } #>;
+    }
+}
+
+<#
+}
+else if (function.Attributes["name"].Value.StartsWith("Set"))
+{
+#>
+public partial class <#= parameters[0] #> : AsanaObject, IAsanaData
+{
+    public Task <#= justReturnName #>(<#= function.Attributes["modifies"].Value #> arg)
+    {
+        Dictionary<string, object> param = new Dictionary<string, object> {{"<#= function.Attributes["paramName"] != null ? function.Attributes["paramName"].Value : justParam #>", arg.ID}};
+        return Host.Save(this, AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>), param);
+        //Dictionary<string, object> param = Parsing.Serialize(arg, true, false);
+        //param.Add("<#= justParam #>", ID);
+        //return Host.Save(this, AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>), param);
+    }
+}
+<#
+}
+else if (function.Attributes["name"].Value.StartsWith("Add") || function.Attributes["name"].Value.StartsWith("Remove"))
+{
+#>
+public partial class <#= parameters[0] #> : AsanaObject, IAsanaData
+{
+    public Task <#= justReturnName #>(<#= function.Attributes["modifies"].Value #> arg)
+    {
+        Dictionary<string, object> param = new Dictionary<string, object> {{"<#= function.Attributes["paramName"] != null ? function.Attributes["paramName"].Value : justParam #>", arg.ID}};
+        return Host.Save(this, AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>), param)<# 
+if (!ReferenceEquals(function.Attributes["addTo"], null) || !ReferenceEquals(function.Attributes["removeFrom"], null)) { 
+#>.ContinueWith(
+            (prevTask) =>
+                <#= !ReferenceEquals(function.Attributes["addTo"], null) ? function.Attributes["addTo"].Value + ".Add" : function.Attributes["removeFrom"].Value + ".Remove" #>(arg), TaskContinuationOptions.NotOnFaulted)<# } #>;
+    }
+}
+<#
+}
+            }
+        }
+#>
+
 }

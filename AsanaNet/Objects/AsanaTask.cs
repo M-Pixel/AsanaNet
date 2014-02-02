@@ -15,7 +15,7 @@ namespace AsanaNet
     }
 
     [Serializable]
-    public class AsanaTask : AsanaObject, IAsanaData
+    public partial class AsanaTask : AsanaObject, IAsanaData
     {
         [AsanaDataAttribute     ("name",            SerializationFlags.Required)]
         public string           Name                { get; set; }
@@ -39,7 +39,7 @@ namespace AsanaNet
         public AsanaDateTime    DueOn               { get; set; }
 
         [AsanaDataAttribute     ("followers",       SerializationFlags.Optional)]
-        public AsanaUser[]      Followers           { get; private set; }
+        public AsanaObjectCollection<AsanaUser>      Followers           { get; private set; }
 
         [AsanaDataAttribute     ("modified_at",     SerializationFlags.Omit)]
         public AsanaDateTime    ModifiedAt          { get; private set; }
@@ -49,28 +49,28 @@ namespace AsanaNet
 
         [AsanaDataAttribute     ("parent",          SerializationFlags.Optional)]
         public AsanaTask        Parent              { get; internal set; }
-
+        /*
         [AsanaDataAttribute     ("projects",        SerializationFlags.Optional, "ID")]
         public AsanaProject[]   Projects            { get; private set; }
 
         [AsanaDataAttribute     ("tags",            SerializationFlags.Optional, "ID")]
         public AsanaTag[]       Tags                { get; private set; }
-
+        */
         [AsanaDataAttribute     ("workspace",       SerializationFlags.Required, "ID")]
         public AsanaWorkspace   Workspace           { get; internal set; }
 
         // ------------------------------------------------------
-
+/*
         internal AsanaTask()
         {
             
         }
-
+        */
         static public implicit operator AsanaTask(Int64 ID)
         {
             return Create(typeof(AsanaTask), ID) as AsanaTask;
         }
-
+        /*
         public AsanaTask(AsanaWorkspace workspace, AsanaTask parentTask = null) 
         {
             Workspace = workspace;
@@ -88,7 +88,8 @@ namespace AsanaNet
             // cache current state
             SetAsReferenceObject();
         }
-
+         * */
+        /*
         public Task AddProject(AsanaProject proj, Asana host)
         {
             Dictionary<string, object> project = new Dictionary<string, object>();
@@ -112,14 +113,7 @@ namespace AsanaNet
             Saving += savedCallback;
             return host.Save(this, AsanaFunction.GetFunction(Function.AddProjectToTask), project);
         }
-
-        public Task SetParent(AsanaTask task, Asana host)
-        {
-            Dictionary<string, object> parent = new Dictionary<string, object>();
-            parent.Add("parent", task.ID);
-            return host.Save(this, AsanaFunction.GetFunction(Function.SetParentTask), parent);
-        }
-
+        
         public Task AddProject(AsanaProject proj)
         {
             if (Host == null)
@@ -213,5 +207,12 @@ namespace AsanaNet
                 throw new NullReferenceException("This AsanaObject does not have a host associated with it so you must specify one when saving.");
             return RemoveTag(proj, Host);
         }
+        public Task SetParent(AsanaTask task, Asana host)
+        {
+            Dictionary<string, object> parent = new Dictionary<string, object>();
+            parent.Add("parent", task.ID);
+            return host.Save(this, AsanaFunction.GetFunction(Function.SetParentTask), parent);
+        }
+        */
     }
 }

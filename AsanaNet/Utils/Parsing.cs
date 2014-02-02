@@ -75,8 +75,6 @@ namespace AsanaNet
                 }
 
                 value = outputList.ToArray();
-
-//                throw new NotImplementedException();
             }
 
             return value;
@@ -104,7 +102,7 @@ namespace AsanaNet
 
             return value;
         }
-
+        /*
         /// <summary>
         /// 
         /// </summary>
@@ -132,7 +130,47 @@ namespace AsanaNet
 
             return value;
         }
+         * */
+        static private AsanaObjectCollection<T> SafeAssignAsanaObjectCollection<T>(Dictionary<string, object> source, string name, Asana host, object currentCollection) where T : AsanaObject
+        {
+            var value = (AsanaObjectCollection<T>) currentCollection;
 
+            if (source.ContainsKey(name) && source[name] != null)
+            {
+                var list = source[name] as List<object>;
+
+                if (!list.Any())
+                {
+                    if (!ReferenceEquals(currentCollection, null))
+                        return value;
+                    return new AsanaObjectCollection<T>();
+                }
+
+                if (value == null)
+                    value = new AsanaObjectCollection<T>();
+
+                //value = new T[list.Count];
+                for (int i = 0; i < list.Count; ++i)
+                {
+                    var obj = list[i] as Dictionary<string, object>;
+
+                    // try from cache
+                    var thisId = (Int64)obj["id"];
+                    var listElement = (T)AsanaObject.Create(typeof(T), thisId, host);
+                    Parsing.Deserialize(obj, listElement, host);
+
+                    if (!value.Contains(listElement))
+                        value.Add(listElement);
+
+//                    T newObj = (T)AsanaObject.Create(typeof(T));
+//                    Parsing.Deserialize(list[i] as Dictionary<string, object>, (newObj as AsanaObject), host);
+//                    value[i] = newObj;
+                }
+            }
+
+            return value;
+        }
+        
         /// <summary>
         /// Deserializes a dictionary based on AsanaDataAttributes
         /// </summary>
@@ -168,12 +206,18 @@ namespace AsanaNet
                     {
                         Type type = objectProperty.PropertyType.IsArray ? objectProperty.PropertyType.GetElementType() : objectProperty.PropertyType;
                         MethodInfo method = null;
-                        if (typeof(AsanaObject).IsAssignableFrom(type))
-                            method = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "SafeAssignAsanaObjectArray" : "SafeAssignAsanaObject", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
+                        object[] invokeParams = new object[] {data, thisAttribute.Name, host};
+                        if (typeof (AsanaObject).IsAssignableFrom(type))
+                        {
+                            // SafeAssignAsanaObjectArray
+                            method = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "SafeAssignAsanaObjectCollection" : "SafeAssignAsanaObject", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
+                            if (objectProperty.PropertyType.IsArray)
+                                invokeParams = new object[] { data, thisAttribute.Name, host, objectProperty.GetValue(obj) };
+                        }
                         else
                             method = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "SafeAssignArray" : "SafeAssign", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
 
-                        var methodResult = method.Invoke(null, new object[] { data, thisAttribute.Name, host });
+                        var methodResult = method.Invoke(null, invokeParams);
 
                         // this check handle base-class properties
                         if (objectProperty.DeclaringType != obj.GetType())
@@ -200,7 +244,7 @@ namespace AsanaNet
         /// </summary>
         /// <param name="data"></param>
         /// <param name="obj"></param>
-        static internal Dictionary<string, object> Serialize(AsanaObject obj, bool asString, bool dirtyOnly)
+        static internal Dictionary<string, object> Serialize(AsanaObject obj, bool asString, bool dirtyOnly, bool ignoreRequired = false)
         {
             var dict = new Dictionary<string, object>();
 
@@ -227,7 +271,7 @@ namespace AsanaNet
                     bool present = ValidateSerializableValue(ref value, ca, p);
 
                     if (present == false)
-                        if (!required)
+                        if (!required || ignoreRequired)
                             continue;
                         else
                             throw new MissingFieldException("Couldn't save object because it was missing a required field: " + p.Name);

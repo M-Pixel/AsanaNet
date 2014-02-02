@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace AsanaNet
 {
     [Serializable]
-    public class AsanaWorkspace : AsanaObject, IAsanaData
+    public partial class AsanaWorkspace : AsanaObject, IAsanaData
     {
         [AsanaDataAttribute("name")]
         public string Name  { get; private set; }
@@ -19,6 +19,7 @@ namespace AsanaNet
         [AsanaDataAttribute("email_domains")]
         public string[] EmailDomains { get; private set; }
 
+        /*
         public Task<AsanaObjectCollection<AsanaProject>> GetProjects(string optFields = null)
         {
             return Host.GetProjectsInWorkspace(this, optFields);
@@ -35,12 +36,17 @@ namespace AsanaNet
         {
             return Host.GetTasksInWorkspace(this, user, optFields);
         }
-
+        */
         // ------------------------------------------------------
 
         static public implicit operator AsanaWorkspace(Int64 id)
         {
             return Create(typeof(AsanaWorkspace), id) as AsanaWorkspace;
+        }
+        /*
+        public AsanaProject NewProject(AsanaTeam team = null)
+        {
+            return new AsanaProject(this, team) {Host = Host};
         }
 
         public async override Task Refresh()
@@ -50,14 +56,13 @@ namespace AsanaNet
             Name = refresh.Name;
             IsOrganization = refresh.IsOrganization;
             EmailDomains = refresh.EmailDomains;
-            /*
-            return Host.GetWorkspaceById(ID, workspace =>
-            {
-                Name = (workspace as AsanaWorkspace).Name;
-                IsOrganization = (workspace as AsanaWorkspace).IsOrganization;
-                EmailDomains = (workspace as AsanaWorkspace).EmailDomains;
-            });
-             * */
+//            return Host.GetWorkspaceById(ID, workspace =>
+//            {
+//                Name = (workspace as AsanaWorkspace).Name;
+//                IsOrganization = (workspace as AsanaWorkspace).IsOrganization;
+//                EmailDomains = (workspace as AsanaWorkspace).EmailDomains;
+//            });
         }
+        */
     }
 }
