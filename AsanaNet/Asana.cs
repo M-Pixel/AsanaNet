@@ -15,7 +15,7 @@ using MiniJSON;
 namespace AsanaNet
 {
     public delegate void AsanaResponseEventHandler(AsanaObject response);
-    public delegate void AsanaCollectionResponseEventHandler(IAsanaObjectCollection response);
+//    public delegate void AsanaCollectionResponseEventHandler(IAsanaObjectCollection response);
 
 	public enum AuthenticationType
 	{
@@ -69,6 +69,8 @@ namespace AsanaNet
 		/// </summary>
 		public string OAuthToken { get; set; }
 
+        public bool Sync = true;
+
         #endregion        
 
         #region Methods
@@ -81,7 +83,7 @@ namespace AsanaNet
         {   
             _baseUrl = "https://app.asana.com/api/1.0";
             _errorCallback = errorCallback;
-            _objectCache = cache ?? new MemCache(Guid.NewGuid().ToString() + "/");
+            _objectCache = cache ?? new MemCache(Guid.NewGuid() + "/");
             DefaultCacheLevel = defaultCacheLevel;
 
 			AuthType = authType;
@@ -132,7 +134,114 @@ namespace AsanaNet
         internal static Dictionary<string, object> GetDataAsDict(string dataString)
         {
             var data = Json.Deserialize(dataString) as Dictionary<string, object>;
-            var data2 = data["data"] as Dictionary<string, object>;
+
+            Dictionary<string, object> data2;
+
+            if (data.ContainsKey("sync"))
+                data2 = data;
+            else
+            {
+                if (data.ContainsKey("data"))
+                    data2 = data["data"] as Dictionary<string, object>;
+                else if (data.ContainsKey("errors"))
+                {
+                    data2 = (data["errors"] as List<object>)[0] as Dictionary<string, object>;
+                    data2.Add("errors", true);
+                }
+                else data2 = data;
+            }
+
+            // handle syncing:
+            if (data2.ContainsKey("data") && data2.ContainsKey("sync") && (data2["data"] as List<object>).Any() && (((data2["data"] as List<object>)[0]) as Dictionary<string, object>).ContainsKey("resource"))
+            {
+                foreach (Dictionary<string, object> obj in data2["data"] as List<object>)
+                {
+                    string[] split = (obj["type"] as string).Split('.');
+                    obj.Add("action", split[1]);
+                    obj["type"] = split[0];
+                    /*
+                    switch (split[0])
+                    {
+                        case "project":
+                            obj["type"] = typeof (AsanaProject);
+                            break;
+                        case "task":
+                            obj["type"] = typeof (AsanaTask);
+                            break;
+                        case "workspace":
+                            obj["type"] = typeof (AsanaWorkspace);
+                            break;
+                        case "story":
+                            obj["type"] = typeof (AsanaStory);
+                            break;
+                    }
+                     * */
+                }
+
+                var list = (from x in (data2["data"] as List<object>)
+                    group x by ((((x as Dictionary<string, object>)["resource"] as Dictionary<string, object>)["id"]) as Int64?)
+                    into grouped
+                    select grouped).ToDictionary(x => x.Key, y => y.ToList());
+
+                var newData = new List<object>();
+
+                foreach (var eventElement in list)
+                {
+                    Dictionary<string, object> oneEvent;
+                    var removed = (from ev in eventElement.Value
+                                  where (string) ((Dictionary<string, object>)ev)["action"] == "removed"
+                                  select ev).ToArray();
+
+                    if (!removed.Any())
+                    {
+                        var added = (from ev in eventElement.Value
+                            where (string) ((Dictionary<string, object>) ev)["action"] == "added"
+                            select ev).ToArray();
+
+                        var changed = from ev in eventElement.Value
+                            where (string) ((Dictionary<string, object>) ev)["action"] == "changed"
+                            orderby DateTime.Parse(((Dictionary<string, object>) ev)["created_at"] as string)
+//                            (new AsanaDateTimeConverter().ConvertFrom(((Dictionary<string, object>)ev)["created_at"]))
+//                            orderby ((AsanaDateTime)((Dictionary<string, object>)ev)["created_at"]).DateTime
+//                            orderby ((AsanaDateTime) ((Dictionary<string, object>) ev)["created_at"]).DateTime
+                                descending
+                            select ev;
+                        if (added.Any())
+                        {
+                            if (changed.Any())
+                            {
+                                oneEvent = (Dictionary<string, object>) changed.First(); // leave only the latest change
+                                oneEvent["action"] = "added";
+                                if (oneEvent["parent"] == null) 
+                                    oneEvent["parent"] = ((Dictionary<string, object>) (added.Last()))["parent"]; // but copy the parent
+                            }
+                            else
+                            {
+                                oneEvent = (Dictionary<string, object>) added.Last();
+                            }
+                            if (oneEvent["parent"] == null) oneEvent["parent"] = new Dictionary<string, object>();
+                            ((Dictionary<string, object>)oneEvent["parent"]).Add("sync_new" + oneEvent["type"], oneEvent["resource"]);
+                            oneEvent.Remove("resource");
+                        }
+                        else
+                        {
+                            // just changes on this object
+                            oneEvent = (Dictionary<string, object>) changed.First();
+                            ((Dictionary<string, object>)oneEvent["resource"]).Add("sync_state", true);
+                        }
+                    }
+                    else
+                    {
+                        oneEvent = (Dictionary<string, object>) removed.Last();
+                        ((Dictionary<string, object>)oneEvent["resource"]).Add("sync_removed", true);
+                    }
+
+                    newData.Add(oneEvent);
+                }
+
+                data2["data"] = newData;
+            }
+
             return data2;
         }
 
@@ -212,6 +321,15 @@ namespace AsanaNet
         }
         */
         #endregion
+        public static void RemoveFromAllCacheListsOfType<T>(AsanaObject obj, Asana Host) where T : AsanaObject
+        {
+            var listsPossiblyContainingThis = Host._objectCache.GetAllOfType<AsanaObjectCollection<T>>("/");
+            foreach (var list in listsPossiblyContainingThis)
+            {
+                list.Remove((T)obj);
+            }
+            obj.ID = (Int64)AsanaExistance.Deleted;
+        }
     }
     public enum AsanaCacheLevel
     {

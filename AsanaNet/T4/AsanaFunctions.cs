@@ -30,6 +30,7 @@ namespace AsanaNet
 			GetTasksInAProject,
 			GetTagById,
 			GetTeamsInWorkspace,
+			GetEvents,
 			CreateTask,
 			CreateProject,
 			CreateTag,
@@ -568,6 +569,32 @@ namespace AsanaNet
 				return output;
 			}
 
+			public async Task<AsanaEventList> GetEvents(AsanaEventedObject arg1,  string arg2, string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default)
+			{
+                if (cacheLevel == AsanaCacheLevel.Default) cacheLevel = this.DefaultCacheLevel;
+
+				string cachePath = GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetEvents), arg1, arg2); 
+				
+                AsanaEventList cachedObject = null;
+                if (cacheLevel >= AsanaCacheLevel.FillExisting)
+                cachedObject = (AsanaEventList) _objectCache.Get(cachePath);
+                if (cacheLevel >= AsanaCacheLevel.UseExisting)
+                {
+                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetEvents), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1, arg2);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetEvents), arg1, arg2);
+
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetEvents), uri);
+                var output = AsanaRequest.GetResponse(response, this, cachedObject);
+				_objectCache.Set(cachePath, output);
+				return output;
+			}
+
 		}
 
 		// Binds the enums, formations and methods
@@ -595,6 +622,7 @@ namespace AsanaNet
 				Functions.Add(Function.GetTasksInAProject, new AsanaFunction("/projects/{0:ID}/tasks", "GET"));
 				Functions.Add(Function.GetTagById, new AsanaFunction("/tags/{0}", "GET"));
 				Functions.Add(Function.GetTeamsInWorkspace, new AsanaFunction("/organizations/{0:ID}/teams", "GET"));
+				Functions.Add(Function.GetEvents, new AsanaFunction("/events?resources={0:ID}&sync={1}", "GET"));
 				Functions.Add(Function.CreateTask, new AsanaFunction("/tasks", "POST"));
 				Functions.Add(Function.CreateProject, new AsanaFunction("/projects", "POST"));
 				Functions.Add(Function.CreateTag, new AsanaFunction("/tags", "POST"));
@@ -626,7 +654,7 @@ namespace AsanaNet
 
         // add function to the objects
 
-public partial class AsanaWorkspace : AsanaObject, IAsanaData
+public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
 	[AsanaDataAttribute     ("users",        SerializationFlags.Optional, "ID")]
     public AsanaObjectCollection<AsanaUser> Users
@@ -653,7 +681,7 @@ public partial class AsanaWorkspace : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaWorkspace : AsanaObject, IAsanaData
+public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
     public Task<AsanaObjectCollection<AsanaTask>> GetTasks( AsanaUser arg2, string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default)
     {
@@ -663,7 +691,7 @@ public partial class AsanaWorkspace : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaWorkspace : AsanaObject, IAsanaData
+public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
 	[AsanaDataAttribute     ("projects",        SerializationFlags.Optional, "ID")]
     public AsanaObjectCollection<AsanaProject> Projects
@@ -690,7 +718,7 @@ public partial class AsanaWorkspace : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaWorkspace : AsanaObject, IAsanaData
+public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
 	[AsanaDataAttribute     ("tags",        SerializationFlags.Optional, "ID")]
     public AsanaObjectCollection<AsanaTag> Tags
@@ -717,7 +745,7 @@ public partial class AsanaWorkspace : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
 	[AsanaDataAttribute     ("tasks",        SerializationFlags.Optional, "ID")]
     public AsanaObjectCollection<AsanaTask> Tasks
@@ -744,7 +772,7 @@ public partial class AsanaTask : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
 	[AsanaDataAttribute     ("stories",        SerializationFlags.Optional, "ID")]
     public AsanaObjectCollection<AsanaStory> Stories
@@ -771,7 +799,7 @@ public partial class AsanaTask : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
 	[AsanaDataAttribute     ("projects",        SerializationFlags.Optional, "ID")]
     public AsanaObjectCollection<AsanaProject> Projects
@@ -798,7 +826,7 @@ public partial class AsanaTask : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
 	[AsanaDataAttribute     ("tags",        SerializationFlags.Optional, "ID")]
     public AsanaObjectCollection<AsanaTag> Tags
@@ -825,7 +853,7 @@ public partial class AsanaTask : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaTag : AsanaObject, IAsanaData
+public partial class AsanaTag // : AsanaObject, IAsanaData
 {
 	[AsanaDataAttribute     ("tasks",        SerializationFlags.Optional, "ID")]
     public AsanaObjectCollection<AsanaTask> Tasks
@@ -852,7 +880,7 @@ public partial class AsanaTag : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaProject : AsanaObject, IAsanaData
+public partial class AsanaProject // : AsanaObject, IAsanaData
 {
 	[AsanaDataAttribute     ("tasks",        SerializationFlags.Optional, "ID")]
     public AsanaObjectCollection<AsanaTask> Tasks
@@ -879,7 +907,7 @@ public partial class AsanaProject : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaWorkspace : AsanaObject, IAsanaData
+public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
 	[AsanaDataAttribute     ("teams",        SerializationFlags.Optional, "ID")]
     public AsanaObjectCollection<AsanaTeam> Teams
@@ -906,7 +934,17 @@ public partial class AsanaWorkspace : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaWorkspace : AsanaObject, IAsanaData
+public partial class AsanaEventedObject // : AsanaObject, IAsanaData
+{
+    public Task<AsanaEventList> GetEventLists( string arg2, string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default)
+    {
+        if (!object.ReferenceEquals(Host, null))
+            return Host.GetEvents(this, arg2, optFields, cacheLevel);
+        return null;
+    }
+}
+
+public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
     public Task CreateTask(AsanaTask arg)
     {
@@ -916,7 +954,7 @@ public partial class AsanaWorkspace : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaWorkspace : AsanaObject, IAsanaData
+public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
     public Task CreateProject(AsanaProject arg)
     {
@@ -931,7 +969,7 @@ public partial class AsanaWorkspace : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaWorkspace : AsanaObject, IAsanaData
+public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
     public Task CreateTag(AsanaTag arg)
     {
@@ -946,7 +984,7 @@ public partial class AsanaWorkspace : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
     public Task CreateStory(AsanaStory arg)
     {
@@ -961,7 +999,7 @@ public partial class AsanaTask : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
     public Task CreateSubtask(AsanaTask arg)
     {
@@ -976,7 +1014,7 @@ public partial class AsanaTask : AsanaObject, IAsanaData
     }
 }
 
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
     public Task SetParent(AsanaTask arg)
     {
@@ -987,7 +1025,7 @@ public partial class AsanaTask : AsanaObject, IAsanaData
         //return Host.Save(this, AsanaFunction.GetFunction(Function.SetParent), param);
     }
 }
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
     public Task AddProject(AsanaProject arg)
     {
@@ -997,7 +1035,7 @@ public partial class AsanaTask : AsanaObject, IAsanaData
                 Projects.Add(arg), TaskContinuationOptions.NotOnFaulted);
     }
 }
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
     public Task RemoveProject(AsanaProject arg)
     {
@@ -1007,7 +1045,7 @@ public partial class AsanaTask : AsanaObject, IAsanaData
                 Projects.Remove(arg), TaskContinuationOptions.NotOnFaulted);
     }
 }
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
     public Task AddTag(AsanaTag arg)
     {
@@ -1017,7 +1055,7 @@ public partial class AsanaTask : AsanaObject, IAsanaData
                 Tags.Add(arg), TaskContinuationOptions.NotOnFaulted);
     }
 }
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
     public Task RemoveTag(AsanaTag arg)
     {
@@ -1027,7 +1065,7 @@ public partial class AsanaTask : AsanaObject, IAsanaData
                 Tags.Remove(arg), TaskContinuationOptions.NotOnFaulted);
     }
 }
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
     public Task AddAFollower(AsanaUser arg)
     {
@@ -1037,7 +1075,7 @@ public partial class AsanaTask : AsanaObject, IAsanaData
                 Followers.Add(arg), TaskContinuationOptions.NotOnFaulted);
     }
 }
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
     public Task RemoveAFollower(AsanaUser arg)
     {
@@ -1047,13 +1085,16 @@ public partial class AsanaTask : AsanaObject, IAsanaData
                 Followers.Remove(arg), TaskContinuationOptions.NotOnFaulted);
     }
 }
-public partial class AsanaTask : AsanaObject, IAsanaData
+public partial class AsanaTask // : AsanaObject, IAsanaData
 {
     public Task Delete()
     {
         return Host.Save(this, AsanaFunction.GetFunction(Function.DeleteTask), new Dictionary<string, object>(0)).ContinueWith(
             (prevTask) =>
             {
+                IsRemoved = true; // invokes destroying all of the references to this object
+/*
+                //Asana.RemoveFromAllCacheListsOfType<AsanaTask>(this, Host);
                 var listsPossiblyContainingThis = Host._objectCache.GetAllOfType<AsanaObjectCollection<AsanaTask>>("/");
                 foreach (var list in listsPossiblyContainingThis)
                 {
@@ -1062,18 +1103,22 @@ public partial class AsanaTask : AsanaObject, IAsanaData
                 //if (!ReferenceEquals(Parent.Tasks, null))
                 //    Parent.Tasks.Remove(this);
                 ID = (Int64) AsanaExistance.Deleted;
+*/
             }, TaskContinuationOptions.NotOnFaulted);
 
     }
 }
 
-public partial class AsanaProject : AsanaObject, IAsanaData
+public partial class AsanaProject // : AsanaObject, IAsanaData
 {
     public Task Delete()
     {
         return Host.Save(this, AsanaFunction.GetFunction(Function.DeleteProject), new Dictionary<string, object>(0)).ContinueWith(
             (prevTask) =>
             {
+                IsRemoved = true; // invokes destroying all of the references to this object
+/*
+                //Asana.RemoveFromAllCacheListsOfType<AsanaProject>(this, Host);
                 var listsPossiblyContainingThis = Host._objectCache.GetAllOfType<AsanaObjectCollection<AsanaProject>>("/");
                 foreach (var list in listsPossiblyContainingThis)
                 {
@@ -1082,18 +1127,22 @@ public partial class AsanaProject : AsanaObject, IAsanaData
                 //if (!ReferenceEquals(Workspace.Projects, null))
                 //    Workspace.Projects.Remove(this);
                 ID = (Int64) AsanaExistance.Deleted;
+*/
             }, TaskContinuationOptions.NotOnFaulted);
 
     }
 }
 
-public partial class AsanaStory : AsanaObject, IAsanaData
+public partial class AsanaStory // : AsanaObject, IAsanaData
 {
     public Task Delete()
     {
         return Host.Save(this, AsanaFunction.GetFunction(Function.DeleteStory), new Dictionary<string, object>(0)).ContinueWith(
             (prevTask) =>
             {
+                IsRemoved = true; // invokes destroying all of the references to this object
+/*
+                //Asana.RemoveFromAllCacheListsOfType<AsanaStory>(this, Host);
                 var listsPossiblyContainingThis = Host._objectCache.GetAllOfType<AsanaObjectCollection<AsanaStory>>("/");
                 foreach (var list in listsPossiblyContainingThis)
                 {
@@ -1102,6 +1151,7 @@ public partial class AsanaStory : AsanaObject, IAsanaData
                 //if (!ReferenceEquals(Target.Stories, null))
                 //    Target.Stories.Remove(this);
                 ID = (Int64) AsanaExistance.Deleted;
+*/
             }, TaskContinuationOptions.NotOnFaulted);
 
     }

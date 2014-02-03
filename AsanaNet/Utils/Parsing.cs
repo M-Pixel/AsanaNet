@@ -95,7 +95,9 @@ namespace AsanaNet
             {
                 var obj = source[name] as Dictionary<string, object>;
                 // try from cache
-                var thisId = (Int64) obj["id"];
+                Int64 thisId = 0;
+                if (obj.ContainsKey("id"))
+                    thisId = (Int64) obj["id"];
                 value = (T)AsanaObject.Create(typeof(T), thisId, host);
                 Parsing.Deserialize(obj, (value as AsanaObject), host);
             }
@@ -155,8 +157,16 @@ namespace AsanaNet
                     var obj = list[i] as Dictionary<string, object>;
 
                     // try from cache
-                    var thisId = (Int64)obj["id"];
-                    var listElement = (T)AsanaObject.Create(typeof(T), thisId, host);
+                    T listElement;
+                    if(obj.ContainsKey("id"))
+                    {
+                        var thisId = (Int64)obj["id"];
+                        listElement = (T)AsanaObject.Create(typeof(T), thisId, host);
+                    }
+                    else
+                    {
+                        listElement = (T)AsanaObject.Create(typeof(T), 0, host);
+                    }
                     Parsing.Deserialize(obj, listElement, host);
 
                     if (!value.Contains(listElement))
@@ -170,7 +180,32 @@ namespace AsanaNet
 
             return value;
         }
-        
+
+        /// <summary>
+        /// http://stackoverflow.com/questions/5461295/using-isassignablefrom-with-generics
+        /// </summary>
+        /// <param name="givenType"></param>
+        /// <param name="genericType"></param>
+        /// <returns></returns>
+        public static bool IsAssignableToGenericType(Type givenType, Type genericType)
+        {
+            var interfaceTypes = givenType.GetInterfaces();
+
+            foreach (var it in interfaceTypes)
+            {
+                if (it.IsGenericType && it.GetGenericTypeDefinition() == genericType)
+                    return true;
+            }
+
+            if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
+                return true;
+
+            Type baseType = givenType.BaseType;
+            if (baseType == null) return false;
+
+            return IsAssignableToGenericType(baseType, genericType);
+        }
+
         /// <summary>
         /// Deserializes a dictionary based on AsanaDataAttributes
         /// </summary>
@@ -178,7 +213,7 @@ namespace AsanaNet
         /// <param name="obj"></param>
         static internal void Deserialize(Dictionary<string, object> data, AsanaObject obj, Asana host)
         {
-            foreach(var objectProperty in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            foreach(var objectProperty in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
             {
                 if (objectProperty.Name == "Host")
                 {
@@ -205,13 +240,23 @@ namespace AsanaNet
                     else
                     {
                         Type type = objectProperty.PropertyType.IsArray ? objectProperty.PropertyType.GetElementType() : objectProperty.PropertyType;
+//                        type = type.IsGenericType ? 
                         MethodInfo method = null;
                         object[] invokeParams = new object[] {data, thisAttribute.Name, host};
-                        if (typeof (AsanaObject).IsAssignableFrom(type))
+                        
+                        if (typeof(AsanaObject).IsAssignableFrom(type))
+//                        if (IsAssignableToGenericType(typeof(AsanaObject).IsAssignableFrom(type))
                         {
                             // SafeAssignAsanaObjectArray
                             method = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "SafeAssignAsanaObjectCollection" : "SafeAssignAsanaObject", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
+//                            method = typeof(Parsing).GetMethod("SafeAssignAsanaObject", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
                             if (objectProperty.PropertyType.IsArray)
+                                invokeParams = new object[] { data, thisAttribute.Name, host, objectProperty.GetValue(obj) };
+                        }
+                        else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(AsanaObjectCollection<>))
+                        {
+                            method = typeof(Parsing).GetMethod("SafeAssignAsanaObjectCollection", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type.GetGenericArguments()[0] });
+                            //if (objectProperty.PropertyType.IsArray)
                                 invokeParams = new object[] { data, thisAttribute.Name, host, objectProperty.GetValue(obj) };
                         }
                         else

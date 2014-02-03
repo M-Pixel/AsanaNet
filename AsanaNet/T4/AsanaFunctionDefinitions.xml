@@ -34,6 +34,11 @@ Copyright 2012 Antony Woods
   <Function method="GET" name="GetTasksInAProject"      formation="/projects/{0:ID}/tasks"                    parameters="AsanaProject"                 return="AsanaTask"          collection="true"   />
   <Function method="GET" name="GetTagById"              formation="/tags/{0}"                                 parameters="Int64"                        return="AsanaTag"           collection="false"  />
   <Function method="GET" name="GetTeamsInWorkspace"     formation="/organizations/{0:ID}/teams"               parameters="AsanaWorkspace"               return="AsanaTeam"          collection="true"   />
+  <Function method="GET" name="GetEvents"               formation="/events?resources={0:ID}&amp;sync={1}"     parameters="AsanaEventedObject, string"   return="AsanaEventList"     collection="false"  />
+<!--
+  <Function method="GET" name="GetEventsInWorkspace"    formation="/workspaces/{0:ID}/events"                 parameters="AsanaWorkspace"               return="AsanaEventList"     collection="false"   />
+  <Function method="GET" name="GetEventsInProject"      formation="/project/{0:ID}/events"                    parameters="AsanaProject"                 return="AsanaEventList"     collection="false"   />
+  <Function method="GET" name="GetEventsInTask"         formation="/task/{0:ID}/events"                       parameters="AsanaTask"                    return="AsanaEventList"     collection="false"   />-->
 
   <!-- POST Functions -->                                                                                                                          
   <Function method="POST" name="CreateTask"           formation="/tasks"                                    parameters="AsanaWorkspace"               modifies="AsanaTask"                              />

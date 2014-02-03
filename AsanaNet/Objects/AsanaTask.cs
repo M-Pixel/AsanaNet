@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace AsanaNet
     }
 
     [Serializable]
-    public partial class AsanaTask : AsanaObject, IAsanaData
+    public partial class AsanaTask : AsanaEventedObject, IAsanaData
     {
         [AsanaDataAttribute     ("name",            SerializationFlags.Required)]
         public string           Name                { get; set; }
@@ -47,8 +48,31 @@ namespace AsanaNet
         [AsanaDataAttribute     ("notes",           SerializationFlags.Optional)]
         public string           Notes               { get; set; }
 
-        [AsanaDataAttribute     ("parent",          SerializationFlags.Optional)]
-        public AsanaTask        Parent              { get; internal set; }
+//        [AsanaDataAttribute     ("parent",          SerializationFlags.Optional)]
+//        public AsanaTask        Parent              { get; internal set; }
+
+        [AsanaDataAttribute("parent", SerializationFlags.Optional)]
+        public AsanaTask Parent
+        {
+            get
+            {
+                return _parent;
+            }
+            internal set
+            {
+                _parent = value;
+
+                Debug.Assert(!IsObjectLocal);
+
+                var collection = value.Tasks;
+                if (object.ReferenceEquals(collection, null))
+                    return;
+                if (!collection.Contains(this))
+                    collection.Add(this);
+            }
+        }
+        private AsanaTask _parent { get; set; }
+
         /*
         [AsanaDataAttribute     ("projects",        SerializationFlags.Optional, "ID")]
         public AsanaProject[]   Projects            { get; private set; }
@@ -60,6 +84,56 @@ namespace AsanaNet
         public AsanaWorkspace   Workspace           { get; internal set; }
 
         // ------------------------------------------------------
+
+        [AsanaDataAttribute("sync_removed", SerializationFlags.Optional)]
+        public override bool IsRemoved
+        {
+            get
+            {
+                return base.IsRemoved;
+            }
+            internal set
+            {
+                if (value)
+                    Asana.RemoveFromAllCacheListsOfType<AsanaTask>(this, Host);
+                base.IsRemoved = value;
+            }
+        }
+
+        [AsanaDataAttribute("sync_newtask", SerializationFlags.Optional)]
+        internal AsanaTask _syncNewTask
+        {
+            set
+            {
+                var collection = Tasks;
+                if (object.ReferenceEquals(collection, null))
+                    return;
+                if (!value.IsRemoved)
+                {
+                    collection.Add(value);
+                }
+                //                    collection.Remove(value);
+                //                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
+            }
+        }
+
+        [AsanaDataAttribute("sync_newstory", SerializationFlags.Optional)]
+        internal AsanaStory _syncNewStory
+        {
+            set
+            {
+                var collection = Stories;
+                if (object.ReferenceEquals(collection, null))
+                    return;
+                if (!value.IsRemoved)
+                {
+                    if (!collection.Contains(value))
+                        collection.Add(value);
+                }
+                //                    collection.Remove(value);
+                //                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
+            }
+        }
 /*
         internal AsanaTask()
         {

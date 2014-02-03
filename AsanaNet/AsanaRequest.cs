@@ -72,13 +72,15 @@ namespace AsanaNet
                         response = asana._baseHttpClient.DeleteAsync(uri).Result;
                         break;
                 }
-
-                try
+                if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.PreconditionFailed)
                 {
-                    response.EnsureSuccessStatusCode();
 #if DEBUG
                     asana.ErrorCallback(function.Method, uri.AbsoluteUri, response.StatusCode.ToString(), "SUCCESS");
 #endif
+                }
+                else try
+                {
+                    response.EnsureSuccessStatusCode();
                 }
                 catch (HttpRequestException e)
                 {
@@ -91,7 +93,6 @@ namespace AsanaNet
                         ThrottleFor(retryAfter);
                         return GoAsync(asana, function, uri, content).Result;
                     }
-
                     throw;
                 }
                 return response.Content.ReadAsStringAsync().Result;

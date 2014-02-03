@@ -20,7 +20,7 @@ namespace AsanaNet
     }
 
     [Serializable]
-    public partial class AsanaStory : AsanaObject, IAsanaData
+    public partial class AsanaStory : AsanaEventedObject, IAsanaData
     {
         [AsanaDataAttribute     ("type",        SerializationFlags.Omit)]
         public StoryType        Type            { get; private set; }
@@ -37,10 +37,44 @@ namespace AsanaNet
         [AsanaDataAttribute     ("source",      SerializationFlags.Omit)]
         public StorySource      Source          { get; private set; }
 
-        [AsanaDataAttribute     ("target",      SerializationFlags.Omit)]
-        public AsanaTask        Target          { get; internal set; }
+//        [AsanaDataAttribute     ("target",      SerializationFlags.Omit)]
+//        public AsanaTask        Target          { get; internal set; }
+
+        [AsanaDataAttribute("target", SerializationFlags.Omit)]
+        public AsanaTask Target
+        {
+            get
+            {
+                return _target;
+            }
+            internal set
+            {
+                _target = value;
+                var collection = value.Stories;
+                if (object.ReferenceEquals(collection, null))
+                    return;
+                if (!collection.Contains(this))
+                    collection.Add(this);
+            }
+        }
+        private AsanaTask _target { get; set; }
 
         // ------------------------------------------------------
+
+        [AsanaDataAttribute("sync_removed", SerializationFlags.Optional)]
+        public override bool IsRemoved
+        {
+            get
+            {
+                return base.IsRemoved;
+            }
+            internal set
+            {
+                if (value)
+                    Asana.RemoveFromAllCacheListsOfType<AsanaStory>(this, Host);
+                base.IsRemoved = value;
+            }
+        }
 
         ///
         /*

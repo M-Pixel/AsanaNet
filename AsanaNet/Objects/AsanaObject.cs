@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Reflection;
@@ -16,18 +17,82 @@ namespace AsanaNet
     }
 
     [Serializable]
-    public class AsanaEventedObject : AsanaObject
+    public partial class AsanaEventedObject : AsanaObject, IAsanaEventedObject
     {
+        [AsanaDataAttribute("sync_state", SerializationFlags.Optional)]
+        public bool IsPossiblyOutOfSync {
+            get { return _syncState; }
+            private set
+            {
+                _syncState = value;
+                TouchChanged();
+            } 
+        }
+        private bool _syncState { get; set; }
 
+        [AsanaDataAttribute("sync_removed", SerializationFlags.Optional)]
+        public virtual bool IsRemoved 
+        {
+            get
+            {
+                //return _isRemoved;
+                return ID == (Int64)AsanaExistance.Deleted;
+            }
+            internal set
+            {
+                //_isRemoved = value;
+                ID = (Int64) AsanaExistance.Deleted;
+            }
+        }
+        //private bool _isRemoved { get; set; }
+
+        private AsanaEventList EventList
+        {
+            get
+            {
+                return _eventList;
+            }
+            set
+            {
+                _eventList = value;
+                if (_eventList.PreconditionFailed)
+                    DatasetFlushAction(this);
+//                _eventList.FlushReturnObject = this;
+//                _eventList.DatasetFlushAction += DatasetFlushAction;
+            }
+        }
+        protected virtual void DatasetFlushAction(AsanaObject response)
+        {
+            //throw new NotImplementedException();
+        }
+
+        private AsanaEventList _eventList { get; set; }
+
+        public Task Sync()
+        {
+//            if (object.ReferenceEquals(EventList))
+            return Host.GetEvents(this, ReferenceEquals(EventList, null) ? "0" : EventList.SyncToken, null,
+                AsanaCacheLevel.Ignore)
+                .ContinueWith(
+                    (eventList) =>
+                    {
+                        EventList = eventList.Result;
+                    });
+        }
     }
 
-    public interface IAsanaSyncable
+    interface IAsanaEventedObject
     {
-        event AsanaResponseEventHandler SelfRemoved;
-        event AsanaResponseEventHandler SelfChanged;
-        event AsanaResponseEventHandler ChildAdded;
-        event AsanaResponseEventHandler ChildRemoved;
+        Task Sync();
     }
+//
+//    public interface IAsanaSyncable
+//    {
+//        event AsanaResponseEventHandler SelfRemoved;
+//        event AsanaResponseEventHandler SelfChanged;
+//        event AsanaResponseEventHandler ChildAdded;
+//        event AsanaResponseEventHandler ChildRemoved;
+//    }
 
     enum AsanaExistance
     {
@@ -54,6 +119,17 @@ namespace AsanaNet
         /// The object was saved successfully and changes should be reflected.
         /// </summary>
         public event AsanaResponseEventHandler Saved;
+
+        /// <summary>
+        /// The object was changed remotely, and the changes might be reflected in the state.
+        /// </summary>
+        public event AsanaResponseEventHandler Changed;
+
+        public void TouchChanged()
+        {
+            if (Changed != null)
+                Changed(this);
+        }
 
         // memento
         private Dictionary<string, object> _lastSave;
@@ -97,7 +173,7 @@ namespace AsanaNet
         {
             try
             {
-                AsanaObject o = (AsanaObject)Activator.CreateInstance(t, true);
+                AsanaObject o = (AsanaObject)Activator.CreateInstance(t == typeof(AsanaObject) ? typeof(AsanaDummyParent) : t, true);
                 return o;
             }
             catch (System.Exception)
@@ -202,7 +278,7 @@ namespace AsanaNet
             throw new NotImplementedException();
         }
     }
-
+    /*
     // depracated version
     public interface IAsanaObjectCollection : IList<AsanaObject>
     {
@@ -210,10 +286,10 @@ namespace AsanaNet
 
     // depracated version
     [Serializable]
-    public class AsanaObjectCollection : List<AsanaObject>, IAsanaObjectCollection
+    public class AsanaObjectCollection : ObservableCollection<AsanaObject>, IAsanaObjectCollection
     {
     }
-
+    */
 
     // new version
     public interface IAsanaObjectCollection<T> : IList<T> where T: AsanaObject
@@ -222,12 +298,13 @@ namespace AsanaNet
 
     // new version
     [Serializable]
-    public class AsanaObjectCollection<T> : List<T>, IAsanaObjectCollection<T> where T: AsanaObject
+    public class AsanaObjectCollection<T> : ObservableCollection<T>, IAsanaObjectCollection<T> where T : AsanaObject
     {
     }
 
     static public class IAsanaObjectCollectionExtensions
     {
+        /*
         // depracated version
         static public List<Task> RefreshAll<T>(this IAsanaObjectCollection objects) where T : AsanaObject
         {
@@ -240,7 +317,7 @@ namespace AsanaNet
             }
             return workers;
         }
-
+        */
         // new version
         static public List<Task> RefreshAll<T>(this IAsanaObjectCollection<T> objects) where T : AsanaObject
         {

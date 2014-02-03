@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -21,17 +22,32 @@ namespace AsanaNet
         public AsanaObjectCollection<AsanaUser> Followers { get; private set; }
 
         [AsanaDataAttribute     ("workspace",   SerializationFlags.Required, "ID")]
-        public AsanaWorkspace   Workspace       { get; internal set; }
+        public AsanaWorkspace Workspace
+        {
+            get
+            {
+                return _workspace;
+            }
+            internal set
+            {
+                _workspace = value;
+
+                Debug.Assert(!IsObjectLocal);
+
+                var collection = value.Tags;
+                if (object.ReferenceEquals(collection, null))
+                    return;
+                if (!collection.Contains(this))
+                    collection.Add(this);
+            }
+        }
+
+        private AsanaWorkspace _workspace { get; set; }
 
         [AsanaDataAttribute     ("color",       SerializationFlags.Omit)]
         public string           Color           { get; private set; }
 
         // ------------------------------------------------------
-
-        public void Complete()
-        {
-            throw new NotImplementedException();
-        }
 
         static public implicit operator AsanaTag(Int64 ID)
         {

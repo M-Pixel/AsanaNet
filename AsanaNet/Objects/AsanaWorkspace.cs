@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace AsanaNet
 {
     [Serializable]
-    public partial class AsanaWorkspace : AsanaObject, IAsanaData
+    public partial class AsanaWorkspace : AsanaEventedObject, IAsanaData
     {
         [AsanaDataAttribute("name")]
         public string Name  { get; private set; }
@@ -18,6 +18,27 @@ namespace AsanaNet
 
         [AsanaDataAttribute("email_domains")]
         public string[] EmailDomains { get; private set; }
+
+        [AsanaDataAttribute("sync_newproject", SerializationFlags.Optional)]
+        internal AsanaProject _syncNewProject 
+        {
+            set
+            {
+                var collection = Projects;
+                if (object.ReferenceEquals(collection, null))
+                    return;
+                if (!value.IsRemoved)
+                {
+                    if(!collection.Contains(value))
+                        collection.Add(value);
+                }
+//                    collection.Remove(value);
+//                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
+            } 
+        }
+
+        [AsanaDataAttribute("sync_newtask", SerializationFlags.Optional)]
+        internal AsanaTask _syncNewTask { set { } }
 
         /*
         public Task<AsanaObjectCollection<AsanaProject>> GetProjects(string optFields = null)

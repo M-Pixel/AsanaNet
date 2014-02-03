@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 namespace AsanaNet
 {
     [Serializable]
-    public partial class AsanaProject : AsanaObject, IAsanaData
+    public partial class AsanaProject : AsanaEventedObject, IAsanaData
     {
         [AsanaDataAttribute("name", SerializationFlags.Required)] //
         public string Name { get; set; }
@@ -25,8 +26,28 @@ namespace AsanaNet
         [AsanaDataAttribute("archived", SerializationFlags.Omit)] //
         public bool Archived { get; private set; }
 
-        [AsanaDataAttribute("workspace", SerializationFlags.Optional, "ID")] //
-        public AsanaWorkspace Workspace { get; internal set; }
+        [AsanaDataAttribute("workspace", SerializationFlags.Optional, "ID")]
+        public AsanaWorkspace Workspace
+        {
+            get
+            {
+                return _workspace;
+            }
+            internal set
+            {
+                _workspace = value;
+
+                Debug.Assert(!IsObjectLocal);
+
+                var collection = value.Projects;
+                if (object.ReferenceEquals(collection, null))
+                    return;
+                if (!collection.Contains(this))
+                    collection.Add(this);
+            }
+        }
+
+        private AsanaWorkspace _workspace { get; set; }
 
         [AsanaDataAttribute("followers", SerializationFlags.Optional)] //
         public AsanaObjectCollection<AsanaUser> Followers { get; private set; }
@@ -42,6 +63,21 @@ namespace AsanaNet
 
         [AsanaDataAttribute("members", SerializationFlags.Omit)]
         public AsanaObjectCollection<AsanaUser> Members { get; private set; }
+
+        [AsanaDataAttribute("sync_removed", SerializationFlags.Optional)]
+        public override bool IsRemoved
+        {
+            get
+            {
+                return base.IsRemoved;
+            }
+            internal set
+            {
+                if (value)
+                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(this, Host);
+                base.IsRemoved = value;
+            }
+        }
 
         // ------------------------------------------------------
         /*
