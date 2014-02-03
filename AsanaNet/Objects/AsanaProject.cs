@@ -80,11 +80,7 @@ namespace AsanaNet
         }
 
         // ------------------------------------------------------
-        /*
-        internal AsanaProject()
-        {
-        }
-        */
+
         static public implicit operator AsanaProject(Int64 ID)
         {
             return Create(typeof(AsanaProject), ID) as AsanaProject;

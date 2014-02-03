@@ -654,6 +654,36 @@ namespace AsanaNet
 
         // add function to the objects
 
+public partial class AsanaUser // : AsanaObject, IAsanaData
+{
+}
+
+public partial class AsanaUser // : AsanaObject, IAsanaData
+{
+}
+
+public partial class AsanaUser // : AsanaObject, IAsanaData
+{
+    public async override Task Refresh(string optFields = null)
+    {
+        if (!object.ReferenceEquals(Host, null))
+            await Host.GetUserById(this.ID, optFields, AsanaCacheLevel.Ignore);
+    }
+}
+
+public partial class AsanaWorkspace // : AsanaObject, IAsanaData
+{
+}
+
+public partial class AsanaWorkspace // : AsanaObject, IAsanaData
+{
+    public async override Task Refresh(string optFields = null)
+    {
+        if (!object.ReferenceEquals(Host, null))
+            await Host.GetWorkspaceById(this.ID, optFields, AsanaCacheLevel.Ignore);
+    }
+}
+
 public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
 	[AsanaDataAttribute     ("users",        SerializationFlags.Optional, "ID")]
@@ -742,6 +772,15 @@ public partial class AsanaWorkspace // : AsanaObject, IAsanaData
         if (!object.ReferenceEquals(Host, null))
             return Host.GetTagsInWorkspace(this, optFields, cacheLevel);
         return null;
+    }
+}
+
+public partial class AsanaTask // : AsanaObject, IAsanaData
+{
+    public async override Task Refresh(string optFields = null)
+    {
+        if (!object.ReferenceEquals(Host, null))
+            await Host.GetTaskById(this.ID, optFields, AsanaCacheLevel.Ignore);
     }
 }
 
@@ -880,6 +919,24 @@ public partial class AsanaTag // : AsanaObject, IAsanaData
     }
 }
 
+public partial class AsanaStory // : AsanaObject, IAsanaData
+{
+    public async override Task Refresh(string optFields = null)
+    {
+        if (!object.ReferenceEquals(Host, null))
+            await Host.GetStoryById(this.ID, optFields, AsanaCacheLevel.Ignore);
+    }
+}
+
+public partial class AsanaProject // : AsanaObject, IAsanaData
+{
+    public async override Task Refresh(string optFields = null)
+    {
+        if (!object.ReferenceEquals(Host, null))
+            await Host.GetProjectById(this.ID, optFields, AsanaCacheLevel.Ignore);
+    }
+}
+
 public partial class AsanaProject // : AsanaObject, IAsanaData
 {
 	[AsanaDataAttribute     ("tasks",        SerializationFlags.Optional, "ID")]
@@ -904,6 +961,15 @@ public partial class AsanaProject // : AsanaObject, IAsanaData
         if (!object.ReferenceEquals(Host, null))
             return Host.GetTasksInAProject(this, optFields, cacheLevel);
         return null;
+    }
+}
+
+public partial class AsanaTag // : AsanaObject, IAsanaData
+{
+    public async override Task Refresh(string optFields = null)
+    {
+        if (!object.ReferenceEquals(Host, null))
+            await Host.GetTagById(this.ID, optFields, AsanaCacheLevel.Ignore);
     }
 }
 

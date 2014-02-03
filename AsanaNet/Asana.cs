@@ -159,6 +159,13 @@ namespace AsanaNet
                     string[] split = (obj["type"] as string).Split('.');
                     obj.Add("action", split[1]);
                     obj["type"] = split[0];
+                    if (split[0] == "project")
+                    {
+                        // hack - until they fix it
+                        if (!((Dictionary<string, object>)obj["resource"]).ContainsKey("team") || !((Dictionary<string, object>)obj["resource"]).ContainsKey("archived"))
+                            obj["type"] = "tag";
+                    }
+
                     /*
                     switch (split[0])
                     {
@@ -235,7 +242,7 @@ namespace AsanaNet
                         oneEvent = (Dictionary<string, object>) removed.Last();
                         ((Dictionary<string, object>)oneEvent["resource"]).Add("sync_removed", true);
                     }
-
+                    
                     newData.Add(oneEvent);
                 }
 

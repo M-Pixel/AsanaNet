@@ -19,6 +19,8 @@ namespace AsanaNet
         [AsanaDataAttribute("email_domains")]
         public string[] EmailDomains { get; private set; }
 
+        public readonly AsanaObjectCollection<AsanaTask> FetchedTasks = new AsanaObjectCollection<AsanaTask>();
+
         [AsanaDataAttribute("sync_newproject", SerializationFlags.Optional)]
         internal AsanaProject _syncNewProject 
         {
@@ -38,52 +40,25 @@ namespace AsanaNet
         }
 
         [AsanaDataAttribute("sync_newtask", SerializationFlags.Optional)]
-        internal AsanaTask _syncNewTask { set { } }
+        internal AsanaTask _syncNewTask {
+            set
+            {
+                var collection = FetchedTasks;
+                if (object.ReferenceEquals(collection, null))
+                    return;
+                if (!value.IsRemoved)
+                {
+                    if (!collection.Contains(value))
+                        collection.Add(value);
+                }
+            } 
+        }
 
-        /*
-        public Task<AsanaObjectCollection<AsanaProject>> GetProjects(string optFields = null)
-        {
-            return Host.GetProjectsInWorkspace(this, optFields);
-        }
-        public Task<AsanaObjectCollection<AsanaTag>> GetTags(string optFields = null)
-        {
-            return Host.GetTagsInWorkspace(this, optFields);
-        }
-        public Task<AsanaObjectCollection<AsanaUser>> GetUsers(string optFields = null)
-        {
-            return Host.GetUsersInWorkspace(this, optFields);
-        }
-        public Task<AsanaObjectCollection<AsanaTask>> GetTasks(AsanaUser user, string optFields = null)
-        {
-            return Host.GetTasksInWorkspace(this, user, optFields);
-        }
-        */
         // ------------------------------------------------------
 
         static public implicit operator AsanaWorkspace(Int64 id)
         {
             return Create(typeof(AsanaWorkspace), id) as AsanaWorkspace;
         }
-        /*
-        public AsanaProject NewProject(AsanaTeam team = null)
-        {
-            return new AsanaProject(this, team) {Host = Host};
-        }
-
-        public async override Task Refresh()
-        {
-            var refresh = await Host.GetWorkspaceById(ID);
-
-            Name = refresh.Name;
-            IsOrganization = refresh.IsOrganization;
-            EmailDomains = refresh.EmailDomains;
-//            return Host.GetWorkspaceById(ID, workspace =>
-//            {
-//                Name = (workspace as AsanaWorkspace).Name;
-//                IsOrganization = (workspace as AsanaWorkspace).IsOrganization;
-//                EmailDomains = (workspace as AsanaWorkspace).EmailDomains;
-//            });
-        }
-        */
     }
 }

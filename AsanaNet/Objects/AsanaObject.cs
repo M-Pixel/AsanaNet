@@ -68,10 +68,10 @@ namespace AsanaNet
 
         private AsanaEventList _eventList { get; set; }
 
-        public Task Sync()
+        public Task Sync(string optFields = null)
         {
 //            if (object.ReferenceEquals(EventList))
-            return Host.GetEvents(this, ReferenceEquals(EventList, null) ? "0" : EventList.SyncToken, null,
+            return Host.GetEvents(this, ReferenceEquals(EventList, null) ? "0" : EventList.SyncToken, optFields,
                 AsanaCacheLevel.Ignore)
                 .ContinueWith(
                     (eventList) =>
@@ -83,7 +83,7 @@ namespace AsanaNet
 
     interface IAsanaEventedObject
     {
-        Task Sync();
+        Task Sync(string optFields = null);
     }
 //
 //    public interface IAsanaSyncable
@@ -158,7 +158,7 @@ namespace AsanaNet
             if (Saved != null)
                 Saved(this);
         }
-        public virtual bool IsObjectLocal { get { return ID == 0; } }
+        public virtual bool IsObjectLocal { get { return ID <= 0; } }
 
         public void SetAsReferenceObject()
         {
@@ -273,7 +273,7 @@ namespace AsanaNet
             return ID.GetHashCode();
         }
 
-        public virtual Task Refresh()
+        public virtual Task Refresh(string optFields = null)
         {
             throw new NotImplementedException();
         }

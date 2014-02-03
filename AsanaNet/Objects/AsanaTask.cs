@@ -79,9 +79,32 @@ namespace AsanaNet
 
         [AsanaDataAttribute     ("tags",            SerializationFlags.Optional, "ID")]
         public AsanaTag[]       Tags                { get; private set; }
-        */
         [AsanaDataAttribute     ("workspace",       SerializationFlags.Required, "ID")]
         public AsanaWorkspace   Workspace           { get; internal set; }
+        */
+
+        [AsanaDataAttribute("workspace", SerializationFlags.Required, "ID")]
+        public AsanaWorkspace Workspace
+        {
+            get
+            {
+                return _workspace;
+            }
+            internal set
+            {
+                _workspace = value;
+                if (!IsObjectLocal)
+                {
+                    var collection = value.FetchedTasks;
+                    if (object.ReferenceEquals(collection, null))
+                        return;
+                    if (!collection.Contains(this))
+                        collection.Add(this);
+                }
+            }
+        }
+
+        private AsanaWorkspace _workspace { get; set; }
 
         // ------------------------------------------------------
 

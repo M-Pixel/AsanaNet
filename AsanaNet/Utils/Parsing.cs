@@ -213,12 +213,19 @@ namespace AsanaNet
         /// <param name="obj"></param>
         static internal void Deserialize(Dictionary<string, object> data, AsanaObject obj, Asana host)
         {
+            // we need to set the Host first to use caching
+            PropertyInfo prop = obj.GetType().GetProperty("Host", BindingFlags.Public | BindingFlags.Instance);
+            if (null != prop && prop.CanWrite)
+            {
+                if (obj.Host != host)
+                    prop.SetValue(obj, host);
+            }
             foreach(var objectProperty in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
             {
                 if (objectProperty.Name == "Host")
                 {
-                    if (obj.Host != host)
-                        objectProperty.SetValue(obj, host, new object[] { });
+//                    if (obj.Host != host)
+//                        objectProperty.SetValue(obj, host, new object[] { });
                     continue;
                 }
 
