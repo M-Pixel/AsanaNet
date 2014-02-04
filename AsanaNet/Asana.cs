@@ -165,7 +165,12 @@ namespace AsanaNet
                         if (!((Dictionary<string, object>)obj["resource"]).ContainsKey("team") || !((Dictionary<string, object>)obj["resource"]).ContainsKey("archived"))
                             obj["type"] = "tag";
                     }
-
+                    if (split[1] != "changed")
+                    {
+                        if (obj["parent"] == null) obj["parent"] = new Dictionary<string, object>();
+                        ((Dictionary<string, object>)obj["parent"]).Add("sync_" + obj["action"] + obj["type"], obj["resource"]);
+                        obj.Remove("resource");
+                    }
                     /*
                     switch (split[0])
                     {
@@ -186,6 +191,7 @@ namespace AsanaNet
                 }
 
                 var list = (from x in (data2["data"] as List<object>)
+                            orderby DateTime.Parse(((Dictionary<string, object>)x)["created_at"] as string) descending
                     group x by ((((x as Dictionary<string, object>)["resource"] as Dictionary<string, object>)["id"]) as Int64?)
                     into grouped
                     select grouped).ToDictionary(x => x.Key, y => y.ToList());
