@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Reflection;
@@ -19,33 +20,6 @@ namespace AsanaNet
     [Serializable]
     public partial class AsanaEventedObject : AsanaObject, IAsanaEventedObject
     {
-        [AsanaDataAttribute("sync_state", SerializationFlags.Optional)]
-        public bool IsPossiblyOutOfSync {
-            get { return _syncState; }
-            private set
-            {
-                _syncState = value;
-                TouchChanged();
-            } 
-        }
-        private bool _syncState { get; set; }
-
-        [AsanaDataAttribute("sync_removed", SerializationFlags.Optional)]
-        public virtual bool IsRemoved 
-        {
-            get
-            {
-                //return _isRemoved;
-                return ID == (Int64)AsanaExistance.Deleted;
-            }
-            internal set
-            {
-                //_isRemoved = value;
-                ID = (Int64) AsanaExistance.Deleted;
-            }
-        }
-        //private bool _isRemoved { get; set; }
-
         private AsanaEventList EventList
         {
             get
@@ -56,19 +30,27 @@ namespace AsanaNet
             {
                 _eventList = value;
                 if (_eventList.PreconditionFailed)
-                    DatasetFlushAction(this);
+                    DatasetCacheFlushAction(this);
 //                _eventList.FlushReturnObject = this;
 //                _eventList.DatasetFlushAction += DatasetFlushAction;
             }
         }
-        protected virtual void DatasetFlushAction(AsanaObject response)
+        protected virtual void DatasetCacheFlushAction(AsanaObject response)
         {
-            //throw new NotImplementedException();
+            if (!object.ReferenceEquals(Host, null))
+            {
+                var allCachedObjects = Host.ObjectCache.GetAllNotStartingWith("/");
+                foreach (AsanaObject obj in allCachedObjects)
+                {
+                    obj.IsPossiblyOutOfSync = true;
+                }
+            }
         }
 
         private AsanaEventList _eventList { get; set; }
 
-        public Task Sync(string optFields = null)
+        // TODO: opt fields are now there as asana doesn't support tags/projects differentiation
+        public Task Sync(string optFields = "created_at,type,resource,resource.name,resource.tags,resource.tags.name,resource.tags.workspace,resource.followers,resource.target,resource.text,parent,parent.name")
         {
 //            if (object.ReferenceEquals(EventList))
             return Host.GetEvents(this, ReferenceEquals(EventList, null) ? "0" : EventList.SyncToken, optFields,
@@ -100,6 +82,9 @@ namespace AsanaNet
         Deleted = -1
     }
 
+    // TODO: http://stackoverflow.com/questions/2365152/whats-the-difference-between-using-the-serializable-attribute-implementing-is
+    // http://stackoverflow.com/questions/2121424/serializing-data-transfer-objects-in-net/2121517#2121517
+    // http://www.codeproject.com/Articles/1789/Object-Serialization-using-C
     [Serializable]
     public abstract class AsanaObject
     {
@@ -125,10 +110,35 @@ namespace AsanaNet
         /// </summary>
         public event AsanaResponseEventHandler Changed;
 
-        public void TouchChanged()
+        public bool IsPossiblyOutOfSync
+        {
+            get { return _syncState; }
+            internal set
+            {
+                _syncState = value;
+                TouchChanged();
+            }
+        }
+        private bool _syncState { get; set; }
+
+        internal void TouchChanged()
         {
             if (Changed != null)
                 Changed(this);
+        }
+
+        //        [AsanaDataAttribute("sync_removed", SerializationFlags.Optional)]
+        public virtual bool IsRemoved
+        {
+            get
+            {
+                return ID == (Int64)AsanaExistance.Deleted;
+            }
+            internal set
+            {
+                if (value)
+                    ID = (Int64)AsanaExistance.Deleted;
+            }
         }
 
         // memento
@@ -173,7 +183,7 @@ namespace AsanaNet
         {
             try
             {
-                AsanaObject o = (AsanaObject)Activator.CreateInstance(t == typeof(AsanaObject) ? typeof(AsanaDummyParent) : t, true);
+                AsanaObject o = (AsanaObject)Activator.CreateInstance(t == typeof(AsanaObject) ? typeof(AsanaDummyObject) : t, true);
                 return o;
             }
             catch (System.Exception)
@@ -181,6 +191,7 @@ namespace AsanaNet
                 return null;
             }
         }
+        /*
         internal static T Create<T>() where T: AsanaObject
         {
             try
@@ -194,7 +205,7 @@ namespace AsanaNet
                 return null;
             }
         }
-
+        */
         /// <summary>
         /// Creates a new T without requiring a public constructor.
         /// If the ID exists in the cache of host, it will return that element instead.
@@ -205,17 +216,23 @@ namespace AsanaNet
         /// <returns></returns>
         internal static AsanaObject Create(Type t, Int64 ID, Asana host = null)
         {
-            if (host != null && host._objectCache.Contains(ID.ToString()))
-                return (AsanaObject) host._objectCache.Get(ID.ToString());
+//            Debug.Assert(t != typeof(AsanaDummyObject));
+//            Debug.Assert(t != typeof(AsanaProjectBase));
+
+            if (host != null && host.ObjectCache.Contains(ID.ToString()))
+                return (AsanaObject) host.ObjectCache.Get(ID.ToString());
 
             AsanaObject o = Create(t);
-            o.ID = ID;
+            if (ID != 0 && t != typeof(AsanaDummyObject) && t != typeof(AsanaProjectBase))
+            {
+                o.ID = ID;
 
-            if (host != null) host._objectCache.Add(ID.ToString(), o);
+                if (host != null) host.ObjectCache.Set(ID.ToString(), o);
+            }
 
             return o;
         }
-
+        /*
         internal static T Create<T>(Int64 ID, Asana host = null) where T: AsanaObject
         {
             if (host != null && host._objectCache.Contains(ID.ToString()))
@@ -226,7 +243,7 @@ namespace AsanaNet
             o.ID = ID;
             return o;
         }
-
+        */
         /// <summary>
         /// Parameterless contructor
         /// </summary>
@@ -295,6 +312,9 @@ namespace AsanaNet
     public interface IAsanaObjectCollection<T> : IList<T> where T: AsanaObject
     {
     }
+//    public interface IAsanaObjectCollection : IList<AsanaObject>
+//    {
+//    }
 
     // new version
     [Serializable]

@@ -32,18 +32,20 @@ namespace AsanaNet
         /// The URL we use to prefix all the requests
         /// e.g. https://app.asana.com/api/1.0
         /// </summary>
-        private string _baseUrl;
+        private readonly string _baseUrl;
 
         /// <summary>
         /// An error callback for the outside world
         /// </summary>
-        private Action<string, string, string, string> _errorCallback;
+        private Action<string, string, HttpStatusCode, string, int> _errorCallback;
 
-        internal readonly HttpClient _baseHttpClient = new HttpClient();
+        internal readonly HttpClient BaseHttpClient = new HttpClient();
 
-        internal ICache _objectCache;
+        internal IAsanaCache ObjectCache;
 
         public AsanaCacheLevel DefaultCacheLevel = AsanaCacheLevel.UseExisting;
+
+        public int AutoRetryCount;
 
         #endregion
 
@@ -79,12 +81,15 @@ namespace AsanaNet
         /// Creates a new Asana entry point.
         /// </summary>
 		/// <param name="apiKeyOrBearerToken">The API key (for Basic authentication) or Bearer Token (for OAuth authentication) for the account we intend to access</param>
-		public Asana(string apiKeyOrBearerToken, AuthenticationType authType, Action<string, string, string, string> errorCallback, ICache cache = null, AsanaCacheLevel defaultCacheLevel = AsanaCacheLevel.UseExisting)
+		public Asana(string apiKeyOrBearerToken, AuthenticationType authType, Action<string, string, HttpStatusCode, string, int> errorCallback, int autoRetryCount = 3, IAsanaCache cache = null, AsanaCacheLevel defaultCacheLevel = AsanaCacheLevel.UseExisting)
         {   
             _baseUrl = "https://app.asana.com/api/1.0";
             _errorCallback = errorCallback;
-            _objectCache = cache ?? new MemCache(Guid.NewGuid() + "/");
+            AutoRetryCount = autoRetryCount;
+            ObjectCache = cache ?? new MemCache(Guid.NewGuid() + "/");
             DefaultCacheLevel = defaultCacheLevel;
+            ObjectCache.AddBannedType(typeof(AsanaDummyObject));
+            ObjectCache.AddBannedType(typeof(AsanaProjectBase));
 
 			AuthType = authType;
 			if (AuthType == AuthenticationType.OAuth) {
@@ -95,9 +100,9 @@ namespace AsanaNet
 			}
 
             var defaultAuth = new System.Net.Http.Headers.AuthenticationHeaderValue(AuthType == AuthenticationType.OAuth ? "Bearer" : "Basic", AuthType == AuthenticationType.OAuth ? OAuthToken : EncodedAPIKey);
-            _baseHttpClient.DefaultRequestHeaders.Authorization = defaultAuth;
-			_baseHttpClient.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("AsanaNet", "1.1-async"));
-            _baseHttpClient.DefaultRequestHeaders.Accept.Add(
+            BaseHttpClient.DefaultRequestHeaders.Authorization = defaultAuth;
+			BaseHttpClient.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("AsanaNet", "1.1-async"));
+            BaseHttpClient.DefaultRequestHeaders.Accept.Add(
                 new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
 
             AsanaFunction.InitFunctions();
@@ -161,16 +166,34 @@ namespace AsanaNet
                     obj["type"] = split[0];
                     if (split[0] == "project")
                     {
-                        // hack - until they fix it
-                        if (!((Dictionary<string, object>)obj["resource"]).ContainsKey("team") || !((Dictionary<string, object>)obj["resource"]).ContainsKey("archived"))
-                            obj["type"] = "tag";
+                        if (split[1] == "removed" || split[1] == "changed")
+                            obj["type"] = "projectbase";
+                        else
+                        {
+                            // hack - until they fix it - tags don't have followers
+
+                            var resource = (Dictionary<string, object>) obj["resource"];
+                            if (resource.ContainsKey("followers")
+                                && (resource["followers"] as List<object>).Any()
+                                && ((resource["followers"] as List<object>).First() as Dictionary<string, object>).ContainsKey("id"))
+                                obj["type"] = "project";
+                            else
+                                obj["type"] = "tag";
+                        }
                     }
                     if (split[1] != "changed")
                     {
                         if (obj["parent"] == null) obj["parent"] = new Dictionary<string, object>();
-                        ((Dictionary<string, object>)obj["parent"]).Add("sync_" + obj["action"] + obj["type"], obj["resource"]);
-                        obj.Remove("resource");
+                        ((Dictionary<string, object>) obj["parent"]).Add("sync_" + obj["action"] + obj["type"],
+                            obj["resource"]);
                     }
+                    else
+                    {
+                        ((Dictionary<string, object>)obj["resource"]).Add("sync_state", true);
+                        obj.Add("sync_" + obj["action"] + obj["type"], obj["resource"]);
+                    }
+//                    obj.Remove("resource");
+
                     /*
                     switch (split[0])
                     {
@@ -191,34 +214,47 @@ namespace AsanaNet
                 }
 
                 var list = (from x in (data2["data"] as List<object>)
+                            where (((x as Dictionary<string, object>)["resource"] as Dictionary<string, object>).ContainsKey("id"))
                             orderby DateTime.Parse(((Dictionary<string, object>)x)["created_at"] as string) descending
-                    group x by ((((x as Dictionary<string, object>)["resource"] as Dictionary<string, object>)["id"]) as Int64?)
-                    into grouped
-                    select grouped).ToDictionary(x => x.Key, y => y.ToList());
+                            group x by ((((x as Dictionary<string, object>)["resource"] as Dictionary<string, object>)["id"]) as Int64?)
+                            into grouped
+                            select grouped).ToDictionary(x => x.Key, y => y.ToList());
 
                 var newData = new List<object>();
 
                 foreach (var eventElement in list)
                 {
                     Dictionary<string, object> oneEvent;
-                    var removed = (from ev in eventElement.Value
-                                  where (string) ((Dictionary<string, object>)ev)["action"] == "removed"
-                                  select ev).ToArray();
 
+                    var outputEvents = (from ev in eventElement.Value
+                                  where 
+                                  (string) ((Dictionary<string, object>)ev)["action"] == "removed" 
+                                  ||
+                                  (string)((Dictionary<string, object>)ev)["action"] == "added"
+                                  select ev).ToList();
+
+//                    var added = (from ev in eventElement.Value
+//                                 where (string)((Dictionary<string, object>)ev)["action"] == "added"
+//                                 select ev).ToArray();
+
+                    var changed = from ev in eventElement.Value
+                                  where (string)((Dictionary<string, object>)ev)["action"] == "changed"
+                                  orderby DateTime.Parse(((Dictionary<string, object>)ev)["created_at"] as string)
+                                  descending
+                                  select ev;
+
+                    if (changed.Any())
+                    {
+                        outputEvents.Add(changed.First()); // leave only the latest change
+//                        oneEvent = (Dictionary<string, object>)changed.First(); 
+//                        oneEvent["action"] = "added";
+//                        if (oneEvent["parent"] == null)
+//                            oneEvent["parent"] = ((Dictionary<string, object>)(added.Last()))["parent"]; // but copy the parent
+                    }
+                    /*
                     if (!removed.Any())
                     {
-                        var added = (from ev in eventElement.Value
-                            where (string) ((Dictionary<string, object>) ev)["action"] == "added"
-                            select ev).ToArray();
 
-                        var changed = from ev in eventElement.Value
-                            where (string) ((Dictionary<string, object>) ev)["action"] == "changed"
-                            orderby DateTime.Parse(((Dictionary<string, object>) ev)["created_at"] as string)
-//                            (new AsanaDateTimeConverter().ConvertFrom(((Dictionary<string, object>)ev)["created_at"]))
-//                            orderby ((AsanaDateTime)((Dictionary<string, object>)ev)["created_at"]).DateTime
-//                            orderby ((AsanaDateTime) ((Dictionary<string, object>) ev)["created_at"]).DateTime
-                                descending
-                            select ev;
                         if (added.Any())
                         {
                             if (changed.Any())
@@ -248,8 +284,15 @@ namespace AsanaNet
                         oneEvent = (Dictionary<string, object>) removed.Last();
                         ((Dictionary<string, object>)oneEvent["resource"]).Add("sync_removed", true);
                     }
-                    
                     newData.Add(oneEvent);
+                    */
+
+                    newData.AddRange(outputEvents);
+                    newData = (from ev in newData
+                                          orderby DateTime.Parse(((Dictionary<string, object>) ev)["created_at"] as string)
+                                          ascending
+                                          select ev).ToList();
+                    newData.ForEach(ev => ((Dictionary<string, object>)ev).Remove("resource"));
                 }
 
                 data2["data"] = newData;
@@ -278,9 +321,9 @@ namespace AsanaNet
         /// The callback for response errors
         /// </summary>
         /// <param name="error"></param>
-        internal void ErrorCallback(string method, string requestString, string statusCode, string error)
+        internal void ErrorCallback(string method, string requestString, HttpStatusCode statusCode, string error, int retryNo)
         {
-            _errorCallback(method, requestString, statusCode, error);
+            _errorCallback(method, requestString, statusCode, error, retryNo);
         }
 
         /// <summary>
@@ -336,12 +379,15 @@ namespace AsanaNet
         #endregion
         public static void RemoveFromAllCacheListsOfType<T>(AsanaObject obj, Asana Host) where T : AsanaObject
         {
-            var listsPossiblyContainingThis = Host._objectCache.GetAllOfType<AsanaObjectCollection<T>>("/");
+            var listsPossiblyContainingThis = Host.ObjectCache.GetAllOfType<AsanaObjectCollection<T>>("/");
             foreach (var list in listsPossiblyContainingThis)
             {
                 list.Remove((T)obj);
             }
-            obj.ID = (Int64)AsanaExistance.Deleted;
+            Host.ObjectCache.Remove(obj.ID.ToString());
+//            obj.IsRemoved = true;
+            
+//            obj.ID = (Int64)AsanaExistance.Deleted;
         }
     }
     public enum AsanaCacheLevel

@@ -30,6 +30,7 @@ namespace AsanaNet
 			GetTasksInAProject,
 			GetTagById,
 			GetTeamsInWorkspace,
+			GetTeamById,
 			GetEvents,
 			CreateTask,
 			CreateProject,
@@ -41,8 +42,8 @@ namespace AsanaNet
 			RemoveProject,
 			AddTag,
 			RemoveTag,
-			AddAFollower,
-			RemoveAFollower,
+			AddFollowers,
+			RemoveFollowers,
 			UpdateTask,
 			UpdateTag,
 			UpdateProject,
@@ -63,7 +64,7 @@ namespace AsanaNet
 				
                 AsanaObjectCollection<AsanaUser> cachedObject = null;
                 
-                cachedObject = (AsanaObjectCollection<AsanaUser>) _objectCache.Get(cachePath);
+                cachedObject = (AsanaObjectCollection<AsanaUser>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -77,7 +78,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetUsers), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -89,7 +90,7 @@ namespace AsanaNet
 				
                 AsanaUser cachedObject = null;
                 if (cacheLevel >= AsanaCacheLevel.FillExisting)
-                cachedObject = (AsanaUser) _objectCache.Get(cachePath);
+                cachedObject = (AsanaUser) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -103,7 +104,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetMe), uri);
                 var output = AsanaRequest.GetResponse(response, this, cachedObject);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -114,7 +115,7 @@ namespace AsanaNet
 				string cachePath = string.Format(new PropertyFormatProvider(), "{0}", arg1);
                 AsanaUser cachedObject = null;
                 if (cacheLevel >= AsanaCacheLevel.FillExisting)
-                cachedObject = (AsanaUser) _objectCache.Get(cachePath);
+                cachedObject = (AsanaUser) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -128,7 +129,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetUserById), uri);
                 var output = AsanaRequest.GetResponse(response, this, cachedObject);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -140,7 +141,7 @@ namespace AsanaNet
 				
                 AsanaObjectCollection<AsanaWorkspace> cachedObject = null;
                 
-                cachedObject = (AsanaObjectCollection<AsanaWorkspace>) _objectCache.Get(cachePath);
+                cachedObject = (AsanaObjectCollection<AsanaWorkspace>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -154,7 +155,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetWorkspaces), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -165,7 +166,7 @@ namespace AsanaNet
 				string cachePath = string.Format(new PropertyFormatProvider(), "{0}", arg1);
                 AsanaWorkspace cachedObject = null;
                 if (cacheLevel >= AsanaCacheLevel.FillExisting)
-                cachedObject = (AsanaWorkspace) _objectCache.Get(cachePath);
+                cachedObject = (AsanaWorkspace) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -179,7 +180,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetWorkspaceById), uri);
                 var output = AsanaRequest.GetResponse(response, this, cachedObject);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -191,7 +192,7 @@ namespace AsanaNet
 				
                 AsanaObjectCollection<AsanaUser> cachedObject = null;
                 
-                cachedObject = (AsanaObjectCollection<AsanaUser>) _objectCache.Get(cachePath);
+                cachedObject = (AsanaObjectCollection<AsanaUser>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -205,7 +206,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetUsersInWorkspace), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -217,7 +218,7 @@ namespace AsanaNet
 				
                 AsanaObjectCollection<AsanaTask> cachedObject = null;
                 
-                cachedObject = (AsanaObjectCollection<AsanaTask>) _objectCache.Get(cachePath);
+                cachedObject = (AsanaObjectCollection<AsanaTask>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -231,7 +232,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTasksInWorkspace), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -243,7 +244,7 @@ namespace AsanaNet
 				
                 AsanaObjectCollection<AsanaProject> cachedObject = null;
                 
-                cachedObject = (AsanaObjectCollection<AsanaProject>) _objectCache.Get(cachePath);
+                cachedObject = (AsanaObjectCollection<AsanaProject>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -257,7 +258,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetProjectsInWorkspace), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -269,7 +270,7 @@ namespace AsanaNet
 				
                 AsanaObjectCollection<AsanaTag> cachedObject = null;
                 
-                cachedObject = (AsanaObjectCollection<AsanaTag>) _objectCache.Get(cachePath);
+                cachedObject = (AsanaObjectCollection<AsanaTag>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -283,7 +284,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTagsInWorkspace), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -294,7 +295,7 @@ namespace AsanaNet
 				string cachePath = string.Format(new PropertyFormatProvider(), "{0}", arg1);
                 AsanaTask cachedObject = null;
                 if (cacheLevel >= AsanaCacheLevel.FillExisting)
-                cachedObject = (AsanaTask) _objectCache.Get(cachePath);
+                cachedObject = (AsanaTask) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -308,7 +309,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTaskById), uri);
                 var output = AsanaRequest.GetResponse(response, this, cachedObject);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -320,7 +321,7 @@ namespace AsanaNet
 				
                 AsanaObjectCollection<AsanaTask> cachedObject = null;
                 
-                cachedObject = (AsanaObjectCollection<AsanaTask>) _objectCache.Get(cachePath);
+                cachedObject = (AsanaObjectCollection<AsanaTask>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -334,7 +335,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetSubtasksInTask), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -346,7 +347,7 @@ namespace AsanaNet
 				
                 AsanaObjectCollection<AsanaStory> cachedObject = null;
                 
-                cachedObject = (AsanaObjectCollection<AsanaStory>) _objectCache.Get(cachePath);
+                cachedObject = (AsanaObjectCollection<AsanaStory>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -360,7 +361,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetStoriesInTask), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -372,7 +373,7 @@ namespace AsanaNet
 				
                 AsanaObjectCollection<AsanaProject> cachedObject = null;
                 
-                cachedObject = (AsanaObjectCollection<AsanaProject>) _objectCache.Get(cachePath);
+                cachedObject = (AsanaObjectCollection<AsanaProject>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -386,7 +387,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetProjectsOnATask), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -398,7 +399,7 @@ namespace AsanaNet
 				
                 AsanaObjectCollection<AsanaTag> cachedObject = null;
                 
-                cachedObject = (AsanaObjectCollection<AsanaTag>) _objectCache.Get(cachePath);
+                cachedObject = (AsanaObjectCollection<AsanaTag>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -412,7 +413,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTagsOnATask), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -424,7 +425,7 @@ namespace AsanaNet
 				
                 AsanaObjectCollection<AsanaTask> cachedObject = null;
                 
-                cachedObject = (AsanaObjectCollection<AsanaTask>) _objectCache.Get(cachePath);
+                cachedObject = (AsanaObjectCollection<AsanaTask>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -438,7 +439,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTasksByTag), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -449,7 +450,7 @@ namespace AsanaNet
 				string cachePath = string.Format(new PropertyFormatProvider(), "{0}", arg1);
                 AsanaStory cachedObject = null;
                 if (cacheLevel >= AsanaCacheLevel.FillExisting)
-                cachedObject = (AsanaStory) _objectCache.Get(cachePath);
+                cachedObject = (AsanaStory) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -463,7 +464,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetStoryById), uri);
                 var output = AsanaRequest.GetResponse(response, this, cachedObject);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -474,7 +475,7 @@ namespace AsanaNet
 				string cachePath = string.Format(new PropertyFormatProvider(), "{0}", arg1);
                 AsanaProject cachedObject = null;
                 if (cacheLevel >= AsanaCacheLevel.FillExisting)
-                cachedObject = (AsanaProject) _objectCache.Get(cachePath);
+                cachedObject = (AsanaProject) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -488,7 +489,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetProjectById), uri);
                 var output = AsanaRequest.GetResponse(response, this, cachedObject);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -500,7 +501,7 @@ namespace AsanaNet
 				
                 AsanaObjectCollection<AsanaTask> cachedObject = null;
                 
-                cachedObject = (AsanaObjectCollection<AsanaTask>) _objectCache.Get(cachePath);
+                cachedObject = (AsanaObjectCollection<AsanaTask>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -514,7 +515,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTasksInAProject), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -525,7 +526,7 @@ namespace AsanaNet
 				string cachePath = string.Format(new PropertyFormatProvider(), "{0}", arg1);
                 AsanaTag cachedObject = null;
                 if (cacheLevel >= AsanaCacheLevel.FillExisting)
-                cachedObject = (AsanaTag) _objectCache.Get(cachePath);
+                cachedObject = (AsanaTag) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -539,7 +540,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTagById), uri);
                 var output = AsanaRequest.GetResponse(response, this, cachedObject);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -551,7 +552,7 @@ namespace AsanaNet
 				
                 AsanaObjectCollection<AsanaTeam> cachedObject = null;
                 
-                cachedObject = (AsanaObjectCollection<AsanaTeam>) _objectCache.Get(cachePath);
+                cachedObject = (AsanaObjectCollection<AsanaTeam>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -565,7 +566,32 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTeamsInWorkspace), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
+				return output;
+			}
+
+			public async Task<AsanaTeam> GetTeamById(Int64 arg1, string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default)
+			{
+                if (cacheLevel == AsanaCacheLevel.Default) cacheLevel = this.DefaultCacheLevel;
+
+				string cachePath = string.Format(new PropertyFormatProvider(), "{0}", arg1);
+                AsanaTeam cachedObject = null;
+                if (cacheLevel >= AsanaCacheLevel.FillExisting)
+                cachedObject = (AsanaTeam) ObjectCache.Get(cachePath);
+                if (cacheLevel >= AsanaCacheLevel.UseExisting)
+                {
+                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                        return cachedObject;
+                }
+			    Uri uri;
+                if (optFields != null)
+                    uri = GetBaseUriWithParams(AsanaFunction.GetFunction(Function.GetTeamById), new Dictionary<string,object>{{"opt_fields", optFields}}, arg1);
+                else
+                    uri = GetBaseUri(AsanaFunction.GetFunction(Function.GetTeamById), arg1);
+
+				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTeamById), uri);
+                var output = AsanaRequest.GetResponse(response, this, cachedObject);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -577,7 +603,7 @@ namespace AsanaNet
 				
                 AsanaEventList cachedObject = null;
                 if (cacheLevel >= AsanaCacheLevel.FillExisting)
-                cachedObject = (AsanaEventList) _objectCache.Get(cachePath);
+                cachedObject = (AsanaEventList) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
                     if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
@@ -591,7 +617,7 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetEvents), uri);
                 var output = AsanaRequest.GetResponse(response, this, cachedObject);
-				_objectCache.Set(cachePath, output);
+				ObjectCache.Set(cachePath, output);
 				return output;
 			}
 
@@ -622,6 +648,7 @@ namespace AsanaNet
 				Functions.Add(Function.GetTasksInAProject, new AsanaFunction("/projects/{0:ID}/tasks", "GET"));
 				Functions.Add(Function.GetTagById, new AsanaFunction("/tags/{0}", "GET"));
 				Functions.Add(Function.GetTeamsInWorkspace, new AsanaFunction("/organizations/{0:ID}/teams", "GET"));
+				Functions.Add(Function.GetTeamById, new AsanaFunction("/teams/{0}", "GET"));
 				Functions.Add(Function.GetEvents, new AsanaFunction("/events?resources={0:ID}&sync={1}", "GET"));
 				Functions.Add(Function.CreateTask, new AsanaFunction("/tasks", "POST"));
 				Functions.Add(Function.CreateProject, new AsanaFunction("/projects", "POST"));
@@ -633,8 +660,8 @@ namespace AsanaNet
 				Functions.Add(Function.RemoveProject, new AsanaFunction("/tasks/{0:ID}/removeProject", "POST"));
 				Functions.Add(Function.AddTag, new AsanaFunction("/tasks/{0:ID}/addTag", "POST"));
 				Functions.Add(Function.RemoveTag, new AsanaFunction("/tasks/{0:ID}/removeTag", "POST"));
-				Functions.Add(Function.AddAFollower, new AsanaFunction("/tasks/{0:ID}/addFollowers", "POST"));
-				Functions.Add(Function.RemoveAFollower, new AsanaFunction("/tasks/{0:ID}/removeFollowers", "POST"));
+				Functions.Add(Function.AddFollowers, new AsanaFunction("/tasks/{0:ID}/addFollowers", "POST"));
+				Functions.Add(Function.RemoveFollowers, new AsanaFunction("/tasks/{0:ID}/removeFollowers", "POST"));
 				Functions.Add(Function.UpdateTask, new AsanaFunction("/tasks/{0:ID}", "PUT"));
 				Functions.Add(Function.UpdateTag, new AsanaFunction("/tags/{0:ID}", "PUT"));
 				Functions.Add(Function.UpdateProject, new AsanaFunction("/projects/{0:ID}", "PUT"));
@@ -692,14 +719,14 @@ public partial class AsanaWorkspace // : AsanaObject, IAsanaData
         get 
         {
             var task = GetUsers(null, AsanaCacheLevel.UseExistingOrNull);
-            return !object.ReferenceEquals(task, null) ? task.Result : null;
+            return !object.ReferenceEquals(task.Result, null) ? task.Result : Users = new AsanaObjectCollection<AsanaUser>();
         }
 		private set 
 		{
             if (!object.ReferenceEquals(value, null))
             {
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetUsersInWorkspace), this);
-			    Host._objectCache.Set(cachePath, value);
+			    Host.ObjectCache.Set(cachePath, value);
             }
 		}
     }
@@ -716,7 +743,17 @@ public partial class AsanaWorkspace // : AsanaObject, IAsanaData
     public Task<AsanaObjectCollection<AsanaTask>> GetTasks( AsanaUser arg2, string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default)
     {
         if (!object.ReferenceEquals(Host, null))
-            return Host.GetTasksInWorkspace(this, arg2, optFields, cacheLevel);
+            return Host.GetTasksInWorkspace(this, arg2, optFields, cacheLevel).ContinueWith(
+                (prevTask) =>
+                {
+                    if (cacheLevel < AsanaCacheLevel.UseExistingOrNull)
+                        foreach (var obj in prevTask.Result)
+                        {
+                            obj._workspace = this;
+                        }
+                    return prevTask.Result;
+                }, TaskContinuationOptions.NotOnFaulted)
+;
         return null;
     }
 }
@@ -729,21 +766,31 @@ public partial class AsanaWorkspace // : AsanaObject, IAsanaData
         get 
         {
             var task = GetProjects(null, AsanaCacheLevel.UseExistingOrNull);
-            return !object.ReferenceEquals(task, null) ? task.Result : null;
+            return !object.ReferenceEquals(task.Result, null) ? task.Result : Projects = new AsanaObjectCollection<AsanaProject>();
         }
 		private set 
 		{
             if (!object.ReferenceEquals(value, null))
             {
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetProjectsInWorkspace), this);
-			    Host._objectCache.Set(cachePath, value);
+			    Host.ObjectCache.Set(cachePath, value);
             }
 		}
     }
     public Task<AsanaObjectCollection<AsanaProject>> GetProjects(string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default)
     {
         if (!object.ReferenceEquals(Host, null))
-            return Host.GetProjectsInWorkspace(this, optFields, cacheLevel);
+            return Host.GetProjectsInWorkspace(this, optFields, cacheLevel).ContinueWith(
+                (prevTask) =>
+                {
+                    if (cacheLevel < AsanaCacheLevel.UseExistingOrNull)
+                        foreach (var obj in prevTask.Result)
+                        {
+                            obj._workspace = this;
+                        }
+                    return prevTask.Result;
+                }, TaskContinuationOptions.NotOnFaulted)
+;
         return null;
     }
 }
@@ -756,21 +803,31 @@ public partial class AsanaWorkspace // : AsanaObject, IAsanaData
         get 
         {
             var task = GetTags(null, AsanaCacheLevel.UseExistingOrNull);
-            return !object.ReferenceEquals(task, null) ? task.Result : null;
+            return !object.ReferenceEquals(task.Result, null) ? task.Result : Tags = new AsanaObjectCollection<AsanaTag>();
         }
 		private set 
 		{
             if (!object.ReferenceEquals(value, null))
             {
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTagsInWorkspace), this);
-			    Host._objectCache.Set(cachePath, value);
+			    Host.ObjectCache.Set(cachePath, value);
             }
 		}
     }
     public Task<AsanaObjectCollection<AsanaTag>> GetTags(string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default)
     {
         if (!object.ReferenceEquals(Host, null))
-            return Host.GetTagsInWorkspace(this, optFields, cacheLevel);
+            return Host.GetTagsInWorkspace(this, optFields, cacheLevel).ContinueWith(
+                (prevTask) =>
+                {
+                    if (cacheLevel < AsanaCacheLevel.UseExistingOrNull)
+                        foreach (var obj in prevTask.Result)
+                        {
+                            obj._workspace = this;
+                        }
+                    return prevTask.Result;
+                }, TaskContinuationOptions.NotOnFaulted)
+;
         return null;
     }
 }
@@ -792,21 +849,31 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
         get 
         {
             var task = GetTasks(null, AsanaCacheLevel.UseExistingOrNull);
-            return !object.ReferenceEquals(task, null) ? task.Result : null;
+            return !object.ReferenceEquals(task.Result, null) ? task.Result : Tasks = new AsanaObjectCollection<AsanaTask>();
         }
 		private set 
 		{
             if (!object.ReferenceEquals(value, null))
             {
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetSubtasksInTask), this);
-			    Host._objectCache.Set(cachePath, value);
+			    Host.ObjectCache.Set(cachePath, value);
             }
 		}
     }
     public Task<AsanaObjectCollection<AsanaTask>> GetTasks(string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default)
     {
         if (!object.ReferenceEquals(Host, null))
-            return Host.GetSubtasksInTask(this, optFields, cacheLevel);
+            return Host.GetSubtasksInTask(this, optFields, cacheLevel).ContinueWith(
+                (prevTask) =>
+                {
+                    if (cacheLevel < AsanaCacheLevel.UseExistingOrNull)
+                        foreach (var obj in prevTask.Result)
+                        {
+                            obj._parent = this;
+                        }
+                    return prevTask.Result;
+                }, TaskContinuationOptions.NotOnFaulted)
+;
         return null;
     }
 }
@@ -819,21 +886,31 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
         get 
         {
             var task = GetStories(null, AsanaCacheLevel.UseExistingOrNull);
-            return !object.ReferenceEquals(task, null) ? task.Result : null;
+            return !object.ReferenceEquals(task.Result, null) ? task.Result : Stories = new AsanaObjectCollection<AsanaStory>();
         }
 		private set 
 		{
             if (!object.ReferenceEquals(value, null))
             {
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetStoriesInTask), this);
-			    Host._objectCache.Set(cachePath, value);
+			    Host.ObjectCache.Set(cachePath, value);
             }
 		}
     }
     public Task<AsanaObjectCollection<AsanaStory>> GetStories(string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default)
     {
         if (!object.ReferenceEquals(Host, null))
-            return Host.GetStoriesInTask(this, optFields, cacheLevel);
+            return Host.GetStoriesInTask(this, optFields, cacheLevel).ContinueWith(
+                (prevTask) =>
+                {
+                    if (cacheLevel < AsanaCacheLevel.UseExistingOrNull)
+                        foreach (var obj in prevTask.Result)
+                        {
+                            obj._target = this;
+                        }
+                    return prevTask.Result;
+                }, TaskContinuationOptions.NotOnFaulted)
+;
         return null;
     }
 }
@@ -846,14 +923,14 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
         get 
         {
             var task = GetProjects(null, AsanaCacheLevel.UseExistingOrNull);
-            return !object.ReferenceEquals(task, null) ? task.Result : null;
+            return !object.ReferenceEquals(task.Result, null) ? task.Result : Projects = new AsanaObjectCollection<AsanaProject>();
         }
 		private set 
 		{
             if (!object.ReferenceEquals(value, null))
             {
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetProjectsOnATask), this);
-			    Host._objectCache.Set(cachePath, value);
+			    Host.ObjectCache.Set(cachePath, value);
             }
 		}
     }
@@ -873,14 +950,14 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
         get 
         {
             var task = GetTags(null, AsanaCacheLevel.UseExistingOrNull);
-            return !object.ReferenceEquals(task, null) ? task.Result : null;
+            return !object.ReferenceEquals(task.Result, null) ? task.Result : Tags = new AsanaObjectCollection<AsanaTag>();
         }
 		private set 
 		{
             if (!object.ReferenceEquals(value, null))
             {
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTagsOnATask), this);
-			    Host._objectCache.Set(cachePath, value);
+			    Host.ObjectCache.Set(cachePath, value);
             }
 		}
     }
@@ -900,14 +977,14 @@ public partial class AsanaTag // : AsanaObject, IAsanaData
         get 
         {
             var task = GetTasks(null, AsanaCacheLevel.UseExistingOrNull);
-            return !object.ReferenceEquals(task, null) ? task.Result : null;
+            return !object.ReferenceEquals(task.Result, null) ? task.Result : Tasks = new AsanaObjectCollection<AsanaTask>();
         }
 		private set 
 		{
             if (!object.ReferenceEquals(value, null))
             {
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTasksByTag), this);
-			    Host._objectCache.Set(cachePath, value);
+			    Host.ObjectCache.Set(cachePath, value);
             }
 		}
     }
@@ -945,14 +1022,14 @@ public partial class AsanaProject // : AsanaObject, IAsanaData
         get 
         {
             var task = GetTasks(null, AsanaCacheLevel.UseExistingOrNull);
-            return !object.ReferenceEquals(task, null) ? task.Result : null;
+            return !object.ReferenceEquals(task.Result, null) ? task.Result : Tasks = new AsanaObjectCollection<AsanaTask>();
         }
 		private set 
 		{
             if (!object.ReferenceEquals(value, null))
             {
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTasksInAProject), this);
-			    Host._objectCache.Set(cachePath, value);
+			    Host.ObjectCache.Set(cachePath, value);
             }
 		}
     }
@@ -981,22 +1058,41 @@ public partial class AsanaWorkspace // : AsanaObject, IAsanaData
         get 
         {
             var task = GetTeams(null, AsanaCacheLevel.UseExistingOrNull);
-            return !object.ReferenceEquals(task, null) ? task.Result : null;
+            return !object.ReferenceEquals(task.Result, null) ? task.Result : Teams = new AsanaObjectCollection<AsanaTeam>();
         }
 		private set 
 		{
             if (!object.ReferenceEquals(value, null))
             {
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTeamsInWorkspace), this);
-			    Host._objectCache.Set(cachePath, value);
+			    Host.ObjectCache.Set(cachePath, value);
             }
 		}
     }
     public Task<AsanaObjectCollection<AsanaTeam>> GetTeams(string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default)
     {
         if (!object.ReferenceEquals(Host, null))
-            return Host.GetTeamsInWorkspace(this, optFields, cacheLevel);
+            return Host.GetTeamsInWorkspace(this, optFields, cacheLevel).ContinueWith(
+                (prevTask) =>
+                {
+                    if (cacheLevel < AsanaCacheLevel.UseExistingOrNull)
+                        foreach (var obj in prevTask.Result)
+                        {
+                            obj._organization = this;
+                        }
+                    return prevTask.Result;
+                }, TaskContinuationOptions.NotOnFaulted)
+;
         return null;
+    }
+}
+
+public partial class AsanaTeam // : AsanaObject, IAsanaData
+{
+    public async override Task Refresh(string optFields = null)
+    {
+        if (!object.ReferenceEquals(Host, null))
+            await Host.GetTeamById(this.ID, optFields, AsanaCacheLevel.Ignore);
     }
 }
 
@@ -1012,70 +1108,80 @@ public partial class AsanaEventedObject // : AsanaObject, IAsanaData
 
 public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
-    public Task CreateTask(AsanaTask arg)
+    public Task<AsanaWorkspace> CreateTask(AsanaTask arg)
     {
         arg.Host = Host;
         arg.Workspace = this;
-        return Host.Save(arg, AsanaFunction.GetFunction(Function.CreateTask));
+        return Host.Save(arg, AsanaFunction.GetFunction(Function.CreateTask)).ContinueWith(
+            (prevTask) =>
+                {
+                    //if (!ReferenceEquals(FetchedTasks, null))
+                        if (!FetchedTasks.Contains(arg)) FetchedTasks.Add(arg);
+                    return this;
+                }, TaskContinuationOptions.NotOnFaulted);
     }
 }
 
 public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
-    public Task CreateProject(AsanaProject arg)
+    public Task<AsanaWorkspace> CreateProject(AsanaProject arg)
     {
         arg.Host = Host;
         arg.Workspace = this;
         return Host.Save(arg, AsanaFunction.GetFunction(Function.CreateProject)).ContinueWith(
             (prevTask) =>
                 {
-                    if (!ReferenceEquals(Projects, null))
-                        Projects.Add(arg);
+                    //if (!ReferenceEquals(Projects, null))
+                        if (!Projects.Contains(arg)) Projects.Add(arg);
+                    return this;
                 }, TaskContinuationOptions.NotOnFaulted);
     }
 }
 
 public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
-    public Task CreateTag(AsanaTag arg)
+    public Task<AsanaWorkspace> CreateTag(AsanaTag arg)
     {
         arg.Host = Host;
         arg.Workspace = this;
         return Host.Save(arg, AsanaFunction.GetFunction(Function.CreateTag)).ContinueWith(
             (prevTask) =>
                 {
-                    if (!ReferenceEquals(Tags, null))
-                        Tags.Add(arg);
+                    //if (!ReferenceEquals(Tags, null))
+                        if (!Tags.Contains(arg)) Tags.Add(arg);
+                    return this;
                 }, TaskContinuationOptions.NotOnFaulted);
     }
 }
 
 public partial class AsanaTask // : AsanaObject, IAsanaData
 {
-    public Task CreateStory(AsanaStory arg)
+    public Task<AsanaTask> CreateStory(AsanaStory arg)
     {
         arg.Host = Host;
         arg.Target = this;
         return Host.Save(arg, AsanaFunction.GetFunction(Function.CreateStory)).ContinueWith(
             (prevTask) =>
                 {
-                    if (!ReferenceEquals(Stories, null))
-                        Stories.Add(arg);
+                    //if (!ReferenceEquals(Stories, null))
+                        if (!Stories.Contains(arg)) Stories.Add(arg);
+                    return this;
                 }, TaskContinuationOptions.NotOnFaulted);
     }
 }
 
 public partial class AsanaTask // : AsanaObject, IAsanaData
 {
-    public Task CreateSubtask(AsanaTask arg)
+    public Task<AsanaTask> CreateSubtask(AsanaTask arg)
     {
         arg.Host = Host;
         arg.Parent = this;
         return Host.Save(arg, AsanaFunction.GetFunction(Function.CreateSubtask)).ContinueWith(
             (prevTask) =>
                 {
-                    if (!ReferenceEquals(Tasks, null))
-                        Tasks.Add(arg);
+                    //if (!ReferenceEquals(Tasks, null))
+                        if (!Tasks.Contains(arg)) Tasks.Add(arg);
+                    return this;
                 }, TaskContinuationOptions.NotOnFaulted);
     }
 }
@@ -1133,20 +1239,20 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
 }
 public partial class AsanaTask // : AsanaObject, IAsanaData
 {
-    public Task AddAFollower(AsanaUser arg)
+    public Task AddFollowers(AsanaUser arg)
     {
         Dictionary<string, object> param = new Dictionary<string, object> {{"user", arg.ID}};
-        return Host.Save(this, AsanaFunction.GetFunction(Function.AddAFollower), param).ContinueWith(
+        return Host.Save(this, AsanaFunction.GetFunction(Function.AddFollowers), param).ContinueWith(
             (prevTask) =>
                 Followers.Add(arg), TaskContinuationOptions.NotOnFaulted);
     }
 }
 public partial class AsanaTask // : AsanaObject, IAsanaData
 {
-    public Task RemoveAFollower(AsanaUser arg)
+    public Task RemoveFollowers(AsanaUser arg)
     {
         Dictionary<string, object> param = new Dictionary<string, object> {{"user", arg.ID}};
-        return Host.Save(this, AsanaFunction.GetFunction(Function.RemoveAFollower), param).ContinueWith(
+        return Host.Save(this, AsanaFunction.GetFunction(Function.RemoveFollowers), param).ContinueWith(
             (prevTask) =>
                 Followers.Remove(arg), TaskContinuationOptions.NotOnFaulted);
     }

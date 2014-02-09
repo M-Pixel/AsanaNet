@@ -60,18 +60,22 @@ namespace AsanaNet
             }
             internal set
             {
+                if (object.ReferenceEquals(value, null))
+                    return;
+
                 _parent = value;
 
-                Debug.Assert(!IsObjectLocal);
-
-                var collection = value.Tasks;
-                if (object.ReferenceEquals(collection, null))
-                    return;
-                if (!collection.Contains(this))
-                    collection.Add(this);
+                if (!IsObjectLocal)
+                {
+                    var collection = value.Tasks;
+                    if (object.ReferenceEquals(collection, null))
+                        return;
+                    if (!collection.Contains(this))
+                        collection.Add(this);
+                }
             }
         }
-        private AsanaTask _parent { get; set; }
+        internal AsanaTask _parent { get; set; }
 
         /*
         [AsanaDataAttribute     ("projects",        SerializationFlags.Optional, "ID")]
@@ -92,6 +96,8 @@ namespace AsanaNet
             }
             internal set
             {
+                if (object.ReferenceEquals(value, null))
+                    return;
                 _workspace = value;
                 if (!IsObjectLocal)
                 {
@@ -104,10 +110,25 @@ namespace AsanaNet
             }
         }
 
-        private AsanaWorkspace _workspace { get; set; }
+        internal AsanaWorkspace _workspace { get; set; }
+
+        public override bool IsRemoved
+        {
+            get { return base.IsRemoved; }
+            internal set
+            {
+                if (value)
+                {
+                    Asana.RemoveFromAllCacheListsOfType<AsanaTask>(this, Host);
+                    if (!object.ReferenceEquals(Workspace, null))
+                        Workspace.FetchedTasks.Remove(this);
+                }
+                base.IsRemoved = value;
+            }
+        }
 
         // ------------------------------------------------------
-
+        /*
         [AsanaDataAttribute("sync_removed", SerializationFlags.Optional)]
         public override bool IsRemoved
         {
@@ -122,47 +143,69 @@ namespace AsanaNet
                 base.IsRemoved = value;
             }
         }
-
-        [AsanaDataAttribute("sync_newtask", SerializationFlags.Optional)]
-        internal AsanaTask _syncNewTask
+        */
+        [AsanaDataAttribute("sync_addedtask", SerializationFlags.Optional)]
+        internal AsanaTask _syncAddedSubTask
         {
             set
             {
                 var collection = Tasks;
                 if (object.ReferenceEquals(collection, null))
                     return;
-                if (!value.IsRemoved)
-                {
+//                if (!value.IsRemoved)
+//                {
                     collection.Add(value);
-                }
+//                }
+                //                    collection.Remove(value);
+                //                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
+            }
+        }
+        [AsanaDataAttribute("sync_removedtask", SerializationFlags.Optional)]
+        internal AsanaTask _syncRemovedSubTask
+        {
+            set
+            {
+                value.IsRemoved = true;
+                var collection = Tasks;
+                if (object.ReferenceEquals(collection, null))
+                    return;
+                collection.Remove(value);
                 //                    collection.Remove(value);
                 //                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
             }
         }
 
-        [AsanaDataAttribute("sync_newstory", SerializationFlags.Optional)]
-        internal AsanaStory _syncNewStory
+        [AsanaDataAttribute("sync_addedstory", SerializationFlags.Optional)]
+        internal AsanaStory _syncAddedStory
         {
             set
             {
                 var collection = Stories;
                 if (object.ReferenceEquals(collection, null))
                     return;
-                if (!value.IsRemoved)
-                {
+//                if (!value.IsRemoved)
+//                {
                     if (!collection.Contains(value))
                         collection.Add(value);
-                }
+//                }
                 //                    collection.Remove(value);
                 //                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
             }
         }
-/*
-        internal AsanaTask()
+        [AsanaDataAttribute("sync_removedstory", SerializationFlags.Optional)]
+        internal AsanaStory _syncRemovedStory
         {
-            
+            set
+            {
+                value.IsRemoved = true;
+                var collection = Stories;
+                if (object.ReferenceEquals(collection, null))
+                    return;
+                collection.Remove(value);
+//                Asana.RemoveFromAllCacheListsOfType<AsanaStory>(value, Host);
+                // 
+            }
         }
-        */
         static public implicit operator AsanaTask(Int64 ID)
         {
             return Create(typeof(AsanaTask), ID) as AsanaTask;

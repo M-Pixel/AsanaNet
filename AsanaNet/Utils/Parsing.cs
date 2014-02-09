@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -104,35 +105,7 @@ namespace AsanaNet
 
             return value;
         }
-        /*
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source"></param>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        static private T[] SafeAssignAsanaObjectArray<T>(Dictionary<string, object> source, string name, Asana host) where T : AsanaObject
-        {
-            T[] value = null;
 
-            if (source.ContainsKey(name) && source[name] != null)
-            {
-                var list = source[name] as List<object>;
-
-                value = new T[list.Count];
-                for (int i = 0; i < list.Count; ++i)
-                {
-                    // TODO: try from cache
-                    T newObj = (T)AsanaObject.Create(typeof(T));
-                    Parsing.Deserialize(list[i] as Dictionary<string, object>, (newObj as AsanaObject), host);
-                    value[i] = newObj;
-                }
-            }
-
-            return value;
-        }
-         * */
         static private AsanaObjectCollection<T> SafeAssignAsanaObjectCollection<T>(Dictionary<string, object> source, string name, Asana host, object currentCollection) where T : AsanaObject
         {
             var value = (AsanaObjectCollection<T>) currentCollection;
@@ -180,7 +153,7 @@ namespace AsanaNet
 
             return value;
         }
-
+        /*
         /// <summary>
         /// http://stackoverflow.com/questions/5461295/using-isassignablefrom-with-generics
         /// </summary>
@@ -205,6 +178,50 @@ namespace AsanaNet
 
             return IsAssignableToGenericType(baseType, genericType);
         }
+        */
+
+
+        static private bool IsDifferent<T>(Dictionary<string, object> source, string name, object oldValue)
+        {
+            TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
+
+            if (source.ContainsKey(name) && source[name] != null)
+            {
+                if (converter.CanConvertFrom(typeof(string)) && !string.IsNullOrWhiteSpace(source[name].ToString()))
+                {
+                    var valueToString = source[name].ToString();
+                    var oldValueCast = (T)oldValue;
+                    var oldValueToString = String.Empty;
+                    if (!ReferenceEquals(oldValueCast, null))
+                        oldValueToString = ((T) oldValue).ToString();
+
+                    return valueToString == oldValueToString;
+                }
+            }
+            return true;
+        }
+        static private bool IsDifferentArray<T>(Dictionary<string, object> source, string name, object oldValue)
+        {
+//            TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
+//
+//            if (source.ContainsKey(name) && source[name] != null)
+//            {
+//                var obj = source[name] as List<object>;
+//                var outputList = new List<T>();
+//
+//                foreach (var element in obj)
+//                {
+//                    if (converter.CanConvertFrom(typeof(string)) && !string.IsNullOrWhiteSpace(element.ToString()))
+//                    {
+//                        outputList.Add((T)converter.ConvertFromString(element.ToString()));
+//                    }
+//                }
+//
+//                value = outputList.ToArray();
+//            }
+            // TODO!
+            return true;
+        }
 
         /// <summary>
         /// Deserializes a dictionary based on AsanaDataAttributes
@@ -213,12 +230,18 @@ namespace AsanaNet
         /// <param name="obj"></param>
         static internal void Deserialize(Dictionary<string, object> data, AsanaObject obj, Asana host)
         {
+            var hasChanged = false;
+            var firstTimeObject = false;
+
             // we need to set the Host first to use caching
             PropertyInfo prop = obj.GetType().GetProperty("Host", BindingFlags.Public | BindingFlags.Instance);
             if (null != prop && prop.CanWrite)
             {
                 if (obj.Host != host)
+                {
                     prop.SetValue(obj, host);
+                    firstTimeObject = true;
+                }
             }
             foreach(var objectProperty in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
             {
@@ -242,50 +265,66 @@ namespace AsanaNet
 
                     if (objectProperty.PropertyType == typeof(string))
                     {
-                        objectProperty.SetValue(obj, SafeAssignString(data, thisAttribute.Name), null);
+                        var oldValue = objectProperty.GetValue(obj) as string;
+                        var newValue = SafeAssignString(data, thisAttribute.Name);
+                        objectProperty.SetValue(obj, newValue, null);
+                        hasChanged = hasChanged || oldValue != newValue;
+                        continue;
+                    }
+
+                    Type type = objectProperty.PropertyType.IsArray ? objectProperty.PropertyType.GetElementType() : objectProperty.PropertyType;
+//                        type = type.IsGenericType ? 
+                    MethodInfo method;
+                    object methodResult;
+                    object[] invokeParams = {data, thisAttribute.Name, host};
+                        
+                    if (typeof(AsanaObject).IsAssignableFrom(type))
+                    {
+                        method = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "SafeAssignAsanaObjectCollection" : "SafeAssignAsanaObject", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
+                        if (objectProperty.PropertyType.IsArray)
+                            invokeParams = new[] { data, thisAttribute.Name, host, objectProperty.GetValue(obj) };
+
+                        methodResult = method.Invoke(null, invokeParams);
+                    }
+                    else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof (AsanaObjectCollection<>))
+                    {
+                        method =
+                            typeof (Parsing).GetMethod("SafeAssignAsanaObjectCollection",
+                                BindingFlags.NonPublic | BindingFlags.Static)
+                                .MakeGenericMethod(new[] {type.GetGenericArguments()[0]});
+
+                        invokeParams = new[] {data, thisAttribute.Name, host, objectProperty.GetValue(obj)};
+
+                        methodResult = method.Invoke(null, invokeParams);
                     }
                     else
                     {
-                        Type type = objectProperty.PropertyType.IsArray ? objectProperty.PropertyType.GetElementType() : objectProperty.PropertyType;
-//                        type = type.IsGenericType ? 
-                        MethodInfo method = null;
-                        object[] invokeParams = new object[] {data, thisAttribute.Name, host};
-                        
-                        if (typeof(AsanaObject).IsAssignableFrom(type))
-//                        if (IsAssignableToGenericType(typeof(AsanaObject).IsAssignableFrom(type))
-                        {
-                            // SafeAssignAsanaObjectArray
-                            method = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "SafeAssignAsanaObjectCollection" : "SafeAssignAsanaObject", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
-//                            method = typeof(Parsing).GetMethod("SafeAssignAsanaObject", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
-                            if (objectProperty.PropertyType.IsArray)
-                                invokeParams = new object[] { data, thisAttribute.Name, host, objectProperty.GetValue(obj) };
-                        }
-                        else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(AsanaObjectCollection<>))
-                        {
-                            method = typeof(Parsing).GetMethod("SafeAssignAsanaObjectCollection", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type.GetGenericArguments()[0] });
-                            //if (objectProperty.PropertyType.IsArray)
-                                invokeParams = new object[] { data, thisAttribute.Name, host, objectProperty.GetValue(obj) };
-                        }
-                        else
-                            method = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "SafeAssignArray" : "SafeAssign", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
+                        method = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "SafeAssignArray" : "SafeAssign", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
+                        methodResult = method.Invoke(null, invokeParams);
 
-                        var methodResult = method.Invoke(null, invokeParams);
+                        var isDiffMethod = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "IsDifferentArray" : "IsDifferent", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
+                        var oldValue = objectProperty.GetValue(obj);
+                        var isDifferent = (isDiffMethod.Invoke(null, new[] { data, thisAttribute.Name, oldValue }) as bool?).Value;
+                        hasChanged = hasChanged || isDifferent;
+                    }
 
-                        // this check handle base-class properties
-                        if (objectProperty.DeclaringType != obj.GetType())
-                        {
-                            var p2 = objectProperty.DeclaringType.GetProperty(objectProperty.Name);
-                            p2.SetValue(obj, methodResult, null);
-                        }
-                        else
-                        {
-                            objectProperty.SetValue(obj, methodResult, null);
-                        }
+                    // this check handle base-class properties
+                    if (objectProperty.DeclaringType != obj.GetType())
+                    {
+                        var baseProperty = objectProperty.DeclaringType.GetProperty(objectProperty.Name);
+                        baseProperty.SetValue(obj, methodResult, null);
+                    }
+                    else
+                    {
+                        objectProperty.SetValue(obj, methodResult, null);
                     }
                 }
                 catch(Exception)
                 { 
                 }
+
+                if (!firstTimeObject && hasChanged)
+                    obj.TouchChanged();
             }
         }
 
@@ -332,6 +371,15 @@ namespace AsanaNet
                     {
                         int count = 0;
                         foreach (var x in (object[])value)
+                        {
+                            dict.Add(ca.Name + "[" + count + "]", asString ? x.ToString() : x);
+                            count++;
+                        }
+                    }
+                    else if (value.GetType().GetInterface(typeof(ICollection<>).FullName) != null) //(value is ICollection)
+                    {
+                        int count = 0;
+                        foreach (var x in (ICollection)value)
                         {
                             dict.Add(ca.Name + "[" + count + "]", asString ? x.ToString() : x);
                             count++;

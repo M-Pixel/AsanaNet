@@ -49,18 +49,24 @@ namespace AsanaNet
             }
             internal set
             {
-                _target = value;
-                var collection = value.Stories;
-                if (object.ReferenceEquals(collection, null))
+                if (object.ReferenceEquals(value, null))
                     return;
-                if (!collection.Contains(this))
-                    collection.Add(this);
+                
+                _target = value;
+
+                if (!IsObjectLocal)
+                {
+                    var collection = value.Stories;
+                    if (object.ReferenceEquals(collection, null))
+                        return;
+                    if (!collection.Contains(this))
+                        collection.Add(this);
+                }
             }
         }
-        private AsanaTask _target { get; set; }
+        internal AsanaTask _target { get; set; }
 
         // ------------------------------------------------------
-
         [AsanaDataAttribute("sync_removed", SerializationFlags.Optional)]
         public override bool IsRemoved
         {
@@ -75,7 +81,6 @@ namespace AsanaNet
                 base.IsRemoved = value;
             }
         }
-
         ///
         /*
         internal AsanaStory()

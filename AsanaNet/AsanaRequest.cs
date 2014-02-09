@@ -37,10 +37,11 @@ namespace AsanaNet
         /// <summary>
         /// Begins the request
         /// </summary>
-        public static async Task<string> GoAsync(Asana asana, AsanaFunction function, Uri uri, HttpContent content = null)
+        public static async Task<string> GoAsync(Asana asana, AsanaFunction function, Uri uri, HttpContent content = null, int? triesLeft = null)
         {
             return await Task.Factory.StartNew<string>(() =>
             {
+                if (!triesLeft.HasValue) triesLeft = asana.AutoRetryCount;
                 if (_throttling)
                 {
                     _throttlingWaitHandle.WaitOne();
@@ -56,26 +57,36 @@ namespace AsanaNet
                     content.Headers.ContentType =
                         new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
                 }
-
-                switch (function.Method)
+                try // in case of DNS failure
                 {
-                    default: //GET
-                        response = asana._baseHttpClient.GetAsync(uri).Result;
-                        break;
-                    case "POST":
-                        response = asana._baseHttpClient.PostAsync(uri, content).Result;
-                        break;
-                    case "PUT":
-                        response = asana._baseHttpClient.PutAsync(uri, content).Result;
-                        break;
-                    case "DELETE":
-                        response = asana._baseHttpClient.DeleteAsync(uri).Result;
-                        break;
+                    switch (function.Method)
+                    {
+                        default: //GET
+                            response = asana.BaseHttpClient.GetAsync(uri).Result;
+                            break;
+                        case "POST":
+                            response = asana.BaseHttpClient.PostAsync(uri, content).Result;
+                            break;
+                        case "PUT":
+                            response = asana.BaseHttpClient.PutAsync(uri, content).Result;
+                            break;
+                        case "DELETE":
+                            response = asana.BaseHttpClient.DeleteAsync(uri).Result;
+                            break;
+                    }
+                }
+                catch (Exception e)
+                {
+                    asana.ErrorCallback(function.Method, uri.AbsoluteUri, HttpStatusCode.RequestTimeout, e.InnerException.InnerException.Message, triesLeft.Value);
+                    if (triesLeft > 1)
+                        return GoAsync(asana, function, uri, content, triesLeft - 1).Result;
+                    else
+                        throw;
                 }
                 if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.PreconditionFailed)
                 {
 #if DEBUG
-                    asana.ErrorCallback(function.Method, uri.AbsoluteUri, response.StatusCode.ToString(), "SUCCESS");
+                    asana.ErrorCallback(function.Method, uri.AbsoluteUri, response.StatusCode, "Success", 0);
 #endif
                 }
                 else try
@@ -84,7 +95,7 @@ namespace AsanaNet
                 }
                 catch (HttpRequestException e)
                 {
-                    asana.ErrorCallback(function.Method, uri.AbsoluteUri, response.StatusCode.ToString(), e.Message);
+                    asana.ErrorCallback(function.Method, uri.AbsoluteUri, response.StatusCode, e.Message, triesLeft.Value);
 
                     if (!ReferenceEquals(response.Headers.RetryAfter, null) && response.Headers.RetryAfter.Delta.HasValue)
                     {
@@ -93,7 +104,10 @@ namespace AsanaNet
                         ThrottleFor(retryAfter);
                         return GoAsync(asana, function, uri, content).Result;
                     }
-                    throw;
+                    if (triesLeft > 1)
+                        return GoAsync(asana, function, uri, content, triesLeft - 1).Result;
+                    else
+                        throw;
                 }
                 return response.Content.ReadAsStringAsync().Result;
 

@@ -4,7 +4,7 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#
  System.Xml.XmlDocument configurationData = new System.Xml.XmlDocument();
- configurationData.Load(@"AsanaNet/AsanaNet/T4/AsanaFunctionDefinitions.xml");
+ configurationData.Load(@"/Users/Dell/Dysk Google/Private/Programming/[2013] AugmentedFS/Source Code/AsanaNet/AsanaNet/T4/AsanaFunctionDefinitions.xml");
  // 
  System.Xml.XmlNodeList functionList = configurationData.GetElementsByTagName("Function");
  System.Xml.XmlNodeList associationList = configurationData.GetElementsByTagName("Association");
@@ -231,12 +231,14 @@ namespace AsanaNet
 			string objectType = isCollection ? "AsanaObjectCollection<"+function.Attributes["return"].Value+">" : function.Attributes["return"].Value;
             string justReturnName = function.Attributes["return"].Value.Substring("Asana".Length);
             justReturnName = justReturnName.EndsWith("y") ? justReturnName.TrimEnd("y".ToCharArray()) + "ies" : justReturnName + "s";
-            if (parameters.Length > 0 && parameters[0].StartsWith("Asana"))
+            if (parameters.Length > 0)
             {
 #>
-public partial class <#= parameters[0] #> : AsanaObject, IAsanaData
+public partial class <#= parameters[0].StartsWith("Asana") ? parameters[0] : function.Attributes["return"].Value #> // : AsanaObject, IAsanaData
 {
 <#
+if (parameters[0].StartsWith("Asana"))
+{
 if (parameters.Length == 1)
 {
 #>
@@ -246,7 +248,7 @@ if (parameters.Length == 1)
         get 
         {
             var task = Get<#= justReturnName #>(null, AsanaCacheLevel.UseExistingOrNull);
-            return !object.ReferenceEquals(task, null) ? task.Result : null;
+            return !object.ReferenceEquals(task.Result, null) ? task.Result : <#= justReturnName #> = new <#= objectType #>();
         }
 		private set 
 		{
@@ -263,9 +265,38 @@ if (parameters.Length == 1)
     public Task<<#= objectType #>> Get<#= justReturnName #>(<#= parameterStringWithType #><#= secondArgumentComma #>string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default)
     {
         if (!object.ReferenceEquals(Host, null))
-            return Host.<#= function.Attributes["name"].Value #>(this<#= parameterStringNoType #>, optFields, cacheLevel);
+            return Host.<#= function.Attributes["name"].Value #>(this<#= parameterStringNoType #>, optFields, cacheLevel)<# if (function.Attributes["inObjectSelf"] != null && !String.IsNullOrWhiteSpace(function.Attributes["inObjectSelf"].Value)) { 
+#>
+.ContinueWith(
+                (prevTask) =>
+                {
+                    if (cacheLevel < AsanaCacheLevel.UseExistingOrNull)
+<# if (isCollection) { #>
+                        foreach (var obj in prevTask.Result)
+                        {
+                            obj.<#= function.Attributes["inObjectSelf"].Value #> = this;
+                        }
+<# } else { #>
+                        prevTask.Result.<#= function.Attributes["inObjectSelf"].Value #>;
+<# } #>
+                    return prevTask.Result;
+                }, TaskContinuationOptions.NotOnFaulted)
+<# } #>;
         return null;
     }
+<#
+}
+            else if (function.Attributes["name"].Value != "GetMe" && function.Attributes["name"].Value != "GetWorkspaces" && !isCollection)
+            {
+                #>
+    public async override Task Refresh(string optFields = null)
+    {
+        if (!object.ReferenceEquals(Host, null))
+            await Host.<#= function.Attributes["name"].Value #>(this.ID<#= parameterStringNoType #>, optFields, AsanaCacheLevel.Ignore);
+    }
+<#
+}
+#>
 }
 
 <#
@@ -316,7 +347,7 @@ if (parameters.Length == 1)
 if (function.Attributes["method"].Value == "DELETE")
 {
 #>
-public partial class <#= parameters[0] #> : AsanaObject, IAsanaData
+public partial class <#= parameters[0] #> // : AsanaObject, IAsanaData
 {
     public Task Delete()
     {
@@ -325,6 +356,9 @@ if (!ReferenceEquals(function.Attributes["addTo"], null) || !ReferenceEquals(fun
 #>.ContinueWith(
             (prevTask) =>
             {
+                IsRemoved = true; // invokes destroying all of the references to this object
+/*
+                //Asana.RemoveFromAllCacheListsOfType<<#= parameters[0] #>>(this, Host);
                 var listsPossiblyContainingThis = Host._objectCache.GetAllOfType<AsanaObjectCollection<<#= parameters[0] #>>>("/");
                 foreach (var list in listsPossiblyContainingThis)
                 {
@@ -334,6 +368,7 @@ if (!ReferenceEquals(function.Attributes["addTo"], null) || !ReferenceEquals(fun
                 //    <#= !ReferenceEquals(function.Attributes["addTo"], null) ? function.Attributes["addTo"].Value + ".Add" : function.Attributes["removeFrom"].Value + ".Remove" #>(this);
 <# } #>
                 ID = (Int64) AsanaExistance.Deleted;
+*/
             }, TaskContinuationOptions.NotOnFaulted);
 
     }
@@ -344,9 +379,9 @@ if (!ReferenceEquals(function.Attributes["addTo"], null) || !ReferenceEquals(fun
 else if (function.Attributes["name"].Value.StartsWith("Create"))
 {
 #>
-public partial class <#= parameters[0] #> : AsanaObject, IAsanaData
+public partial class <#= parameters[0] #> // : AsanaObject, IAsanaData
 {
-    public Task <#= justReturnName #>(<#= function.Attributes["modifies"].Value #> arg)
+    public Task<<#= objectType #>> <#= justReturnName #>(<#= function.Attributes["modifies"].Value #> arg)
     {
         arg.Host = Host;
         arg.<#= objectProperty #> = this;
@@ -355,8 +390,9 @@ if (!ReferenceEquals(function.Attributes["addTo"], null) || !ReferenceEquals(fun
 #>.ContinueWith(
             (prevTask) =>
                 {
-                    if (!ReferenceEquals(<#= !ReferenceEquals(function.Attributes["addTo"], null) ? function.Attributes["addTo"].Value : function.Attributes["removeFrom"].Value #>, null))
-                        <#= !ReferenceEquals(function.Attributes["addTo"], null) ? function.Attributes["addTo"].Value + ".Add" : function.Attributes["removeFrom"].Value + ".Remove" #>(arg);
+                    //if (!ReferenceEquals(<#= !ReferenceEquals(function.Attributes["addTo"], null) ? function.Attributes["addTo"].Value : function.Attributes["removeFrom"].Value #>, null))
+                        <#= !ReferenceEquals(function.Attributes["addTo"], null) ? "if (!" + function.Attributes["addTo"].Value + ".Contains(arg)) " + function.Attributes["addTo"].Value + ".Add" : function.Attributes["removeFrom"].Value + ".Remove" #>(arg);
+                    return this;
                 }, TaskContinuationOptions.NotOnFaulted)<# } #>;
     }
 }
@@ -366,7 +402,7 @@ if (!ReferenceEquals(function.Attributes["addTo"], null) || !ReferenceEquals(fun
 else if (function.Attributes["name"].Value.StartsWith("Set"))
 {
 #>
-public partial class <#= parameters[0] #> : AsanaObject, IAsanaData
+public partial class <#= parameters[0] #> // : AsanaObject, IAsanaData
 {
     public Task <#= justReturnName #>(<#= function.Attributes["modifies"].Value #> arg)
     {
@@ -382,7 +418,7 @@ public partial class <#= parameters[0] #> : AsanaObject, IAsanaData
 else if (function.Attributes["name"].Value.StartsWith("Add") || function.Attributes["name"].Value.StartsWith("Remove"))
 {
 #>
-public partial class <#= parameters[0] #> : AsanaObject, IAsanaData
+public partial class <#= parameters[0] #> // : AsanaObject, IAsanaData
 {
     public Task <#= justReturnName #>(<#= function.Attributes["modifies"].Value #> arg)
     {

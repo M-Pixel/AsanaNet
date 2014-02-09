@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AsanaNet
 {
-    public interface ICache
+    public interface IAsanaCache
     {
         void SetRegion(string name);
         void Add(string key, object value);
@@ -16,13 +16,15 @@ namespace AsanaNet
         void Set(string key, object value, TimeSpan timeout);
         void SetFromTask(string key, Task<object> task, TimeSpan timeout);
         void SetFromTask(string key, Task<object> task);
+        void AddBannedType(Type t);
         bool Contains(string key);
         void Flush();
         object Get(string key);
         void Remove(string key);
         List<T> GetAllOfType<T>(string keyStartsWith = null);
+        List<object> GetAllNotStartingWith(string keyDoesntStartWith);
     }
-    public class MemCache : ICache
+    public class MemCache : IAsanaCache
     {
         private readonly static MemoryCache MemoryCache = MemoryCache.Default;
         public string Prefix = String.Empty;
@@ -57,6 +59,16 @@ namespace AsanaNet
                 }
             return objectsOfT;
         }
+        public List<object> GetAllNotStartingWith(string keyDoesntStartWith)
+        {
+            var objectsOfT = new List<object>();
+
+            foreach (var entry in MemoryCache.Where(entry => !entry.Key.StartsWith(Prefix + keyDoesntStartWith)))
+            {
+                objectsOfT.Add(entry.Value);
+            }
+            return objectsOfT;
+        }
 
         public string PrefixedKey(string key)
         {
@@ -77,16 +89,29 @@ namespace AsanaNet
         }
         public void Add(string key, object value, TimeSpan timeout)
         {
-            var policy = new CacheItemPolicy
+            if (!BannedTypes.Contains(value.GetType()))
             {
-                AbsoluteExpiration = DateTimeOffset.Now.Add(timeout)
-            };
-            MemoryCache.Add(PrefixedKey(key), value, policy);
+                var policy = new CacheItemPolicy
+                {
+                    AbsoluteExpiration = DateTimeOffset.Now.Add(timeout)
+                };
+                MemoryCache.Add(PrefixedKey(key), value, policy);
+            }
         }
         public void Add(string key, object value)
         {
-            MemoryCache.Add(PrefixedKey(key), value, new CacheItemPolicy());
+            if (!BannedTypes.Contains(value.GetType()))
+            {
+                MemoryCache.Add(PrefixedKey(key), value, new CacheItemPolicy());
+            }
         }
+
+        public List<Type> BannedTypes = new List<Type>();
+        public void AddBannedType(Type t)
+        {
+            BannedTypes.Add(t);
+        }
+
         public bool Contains(string key)
         {
             return MemoryCache.Contains(PrefixedKey(key));

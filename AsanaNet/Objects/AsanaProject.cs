@@ -9,54 +9,71 @@ using System.Threading.Tasks;
 namespace AsanaNet
 {
     [Serializable]
-    public partial class AsanaProject : AsanaEventedObject, IAsanaData
+    public partial class AsanaProject : AsanaProjectBase
     {
-        [AsanaDataAttribute("name", SerializationFlags.Required)] //
-        public string Name { get; set; }
-
-        [AsanaDataAttribute("created_at", SerializationFlags.Omit)] //
-        public AsanaDateTime CreatedAt { get; private set; }
-
         [AsanaDataAttribute("modified_at", SerializationFlags.Omit)] //
         public AsanaDateTime ModifiedAt { get; private set; }
 
-        [AsanaDataAttribute("notes", SerializationFlags.Optional)] //
-        public string Notes { get; set; }
-
-        [AsanaDataAttribute("archived", SerializationFlags.Omit)] //
-        public bool Archived { get; private set; }
+        [AsanaDataAttribute("archived", SerializationFlags.Optional)] //
+        public bool Archived { get; set; }
 
         [AsanaDataAttribute("workspace", SerializationFlags.Optional, "ID")]
-        public AsanaWorkspace Workspace
+        public override AsanaWorkspace Workspace
         {
             get
             {
-                return _workspace;
+                return base.Workspace;
             }
             internal set
             {
-                _workspace = value;
-
-                Debug.Assert(!IsObjectLocal);
-
-                var collection = value.Projects;
-                if (object.ReferenceEquals(collection, null))
+                if (object.ReferenceEquals(value, null))
                     return;
-                if (!collection.Contains(this))
-                    collection.Add(this);
+
+                base.Workspace = value;
+
+                if (!IsObjectLocal)
+                {
+                    var collection = value.Projects;
+                    if (object.ReferenceEquals(collection, null))
+                        return;
+                    if (!collection.Contains(this))
+                        collection.Add(this);
+                }
             }
         }
 
-        private AsanaWorkspace _workspace { get; set; }
-
-        [AsanaDataAttribute("followers", SerializationFlags.Optional)] //
-        public AsanaObjectCollection<AsanaUser> Followers { get; private set; }
-
         [AsanaDataAttribute("team", SerializationFlags.Optional, "ID")] //
-        public AsanaTeam Team { get; private set; }
+        public AsanaTeam Team
+        {
+            get
+            {
+                return _team;
+            }
+            internal set
+            {
+                if (object.ReferenceEquals(value, null))
+                    return;
 
-        [AsanaDataAttribute("color", SerializationFlags.Omit)] //
-        public string Color { get; private set; }
+                _team = value;
+
+                if (!IsObjectLocal)
+                {
+                    // TODO: add after Creating too
+                    if (!value.Projects.Contains(this))
+                        value.Projects.Add(this);
+
+                    if (!object.ReferenceEquals(Workspace, null))
+                    {
+                        var collection = Workspace.Teams;
+                        if (object.ReferenceEquals(collection, null))
+                            return;
+                        if (!collection.Contains(value))
+                            collection.Add(value);
+                    }
+                }
+            }
+        }
+        internal AsanaTeam _team { get; set; }
 
         [AsanaDataAttribute("public", SerializationFlags.Omit)]
         public bool Public { get; private set; }
@@ -64,7 +81,6 @@ namespace AsanaNet
         [AsanaDataAttribute("members", SerializationFlags.Omit)]
         public AsanaObjectCollection<AsanaUser> Members { get; private set; }
 
-        [AsanaDataAttribute("sync_removed", SerializationFlags.Optional)]
         public override bool IsRemoved
         {
             get
@@ -79,12 +95,50 @@ namespace AsanaNet
             }
         }
 
+
+        [AsanaDataAttribute("sync_addedtask", SerializationFlags.Optional)]
+        private AsanaTask _syncAddedTask
+        {
+            set
+            {
+//                value.Workspace = Workspace;
+                var collection = Tasks;
+                if (object.ReferenceEquals(collection, null))
+                    return;
+                if (!collection.Contains(value))
+                    collection.Add(value);
+            }
+        }
+
+        [AsanaDataAttribute("sync_removedtask", SerializationFlags.Optional)]
+        private AsanaTask _syncRemovedTask
+        {
+            set
+            {
+                var collection = Tasks;
+                if (object.ReferenceEquals(collection, null))
+                    return;
+                collection.Remove(value);
+//                value.IsRemoved = true;
+            }
+        }
+        
+
         // ------------------------------------------------------
 
         static public implicit operator AsanaProject(Int64 ID)
         {
             return Create(typeof(AsanaProject), ID) as AsanaProject;
         }
+
+        public AsanaProject(AsanaTeam team = null)
+        {
+            Team = team;
+        }
+        public AsanaProject()
+        {
+        }
+
         /*
         public AsanaProject(Int64 id = 0)
         {

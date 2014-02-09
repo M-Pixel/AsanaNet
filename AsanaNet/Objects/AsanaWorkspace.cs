@@ -20,38 +20,97 @@ namespace AsanaNet
         public string[] EmailDomains { get; private set; }
 
         public readonly AsanaObjectCollection<AsanaTask> FetchedTasks = new AsanaObjectCollection<AsanaTask>();
+//        public readonly AsanaObjectCollection<AsanaTeam> FetchedTeams = new AsanaObjectCollection<AsanaTeam>();
 
-        [AsanaDataAttribute("sync_newproject", SerializationFlags.Optional)]
-        internal AsanaProject _syncNewProject 
+        [AsanaDataAttribute("sync_addedproject", SerializationFlags.Optional)]
+        private AsanaProject _syncAddedProject 
         {
             set
             {
+                value._workspace = this;
                 var collection = Projects;
                 if (object.ReferenceEquals(collection, null))
                     return;
-                if (!value.IsRemoved)
-                {
-                    if(!collection.Contains(value))
-                        collection.Add(value);
-                }
+//                if (!value.IsRemoved)
+//                {
+                if(!collection.Contains(value))
+                    collection.Add(value);
+//                }
 //                    collection.Remove(value);
 //                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
             } 
         }
-
-        [AsanaDataAttribute("sync_newtask", SerializationFlags.Optional)]
-        internal AsanaTask _syncNewTask {
+        [AsanaDataAttribute("sync_addedtag", SerializationFlags.Optional)]
+        private AsanaTag _syncAddedTag
+        {
             set
             {
+                value._workspace = this;
+                var collection = Tags;
+                if (object.ReferenceEquals(collection, null))
+                    return;
+                if (!collection.Contains(value))
+                    collection.Add(value);
+            }
+        }
+
+        [AsanaDataAttribute("sync_addedtask", SerializationFlags.Optional)]
+        private AsanaTask _syncAddedTask {
+            set
+            {
+                value._workspace = this;
                 var collection = FetchedTasks;
                 if (object.ReferenceEquals(collection, null))
                     return;
-                if (!value.IsRemoved)
-                {
+//                if (!value.IsRemoved)
+//                {
                     if (!collection.Contains(value))
                         collection.Add(value);
-                }
-            } 
+//                }
+            }
+        }
+
+        [AsanaDataAttribute("sync_removedtask", SerializationFlags.Optional)]
+        private AsanaTask _syncRemovedTask
+        {
+            set
+            {
+//                Asana.RemoveFromAllCacheListsOfType<AsanaTask>(value, Host);
+                value.IsRemoved = true;
+            }
+        }
+        
+        [AsanaDataAttribute("sync_removedprojectbase", SerializationFlags.Optional)]
+        private AsanaProjectBase _syncRemovedProjectBase
+        {
+            set
+            {
+                value.IsRemoved = true;
+//                if (value as AsanaProject != null)
+//                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
+//                else if (value as AsanaTag != null)
+//                    Asana.RemoveFromAllCacheListsOfType<AsanaTag>(value, Host);
+            }
+        }
+
+        [AsanaDataAttribute("sync_removedproject", SerializationFlags.Optional)]
+        private AsanaProject _syncRemovedProject
+        {
+            set
+            {
+                value.IsRemoved = true;
+//                Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
+            }
+        }
+
+        [AsanaDataAttribute("sync_removedtag", SerializationFlags.Optional)]
+        private AsanaTag _syncRemovedTag
+        {
+            set
+            {
+                value.IsRemoved = true;
+//                Asana.RemoveFromAllCacheListsOfType<AsanaTag>(value, Host);
+            }
         }
 
         // ------------------------------------------------------
