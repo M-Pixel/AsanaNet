@@ -243,6 +243,98 @@ namespace AsanaNet
                     firstTimeObject = true;
                 }
             }
+
+//            foreach (
+//                var objectProperty in
+//                    obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
+//            {
+//                var test = objectProperty.GetCustomAttributesData();
+//            }
+            var query =
+                (from objectProperty in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
+                where objectProperty.GetCustomAttributesData().Any(attr => attr.AttributeType == typeof (AsanaDataAttribute))
+                    // && objectProperty.Name != "Host"
+                group objectProperty by objectProperty.GetCustomAttributes(typeof (AsanaDataAttribute), false))
+                .ToDictionary(group => group.FirstOrDefault(), group =>
+                {
+                    if (group.Key.Length == 0) return null;
+                    return group.Key.First() as AsanaDataAttribute;
+                });
+
+            var filtered = from property in query
+                            where !ReferenceEquals(property.Value, default(AsanaDataAttribute))
+                            orderby property.Value.Priority
+                            select property;
+
+            foreach (var propAttrib in filtered)
+            {
+                var objectProperty = propAttrib.Key;
+                var thisAttribute = propAttrib.Value;
+
+                if (!data.ContainsKey(thisAttribute.Name))
+                    continue;
+
+                if (objectProperty.PropertyType == typeof(string))
+                {
+                    var oldValue = objectProperty.GetValue(obj) as string;
+                    var newValue = SafeAssignString(data, thisAttribute.Name);
+                    objectProperty.SetValue(obj, newValue, null);
+                    hasChanged = hasChanged || oldValue != newValue;
+                    continue;
+                }
+
+                Type type = objectProperty.PropertyType.IsArray ? objectProperty.PropertyType.GetElementType() : objectProperty.PropertyType;
+                //                        type = type.IsGenericType ? 
+                MethodInfo method;
+                object methodResult;
+                object[] invokeParams = { data, thisAttribute.Name, host };
+
+                if (typeof(AsanaObject).IsAssignableFrom(type))
+                {
+                    method = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "SafeAssignAsanaObjectCollection" : "SafeAssignAsanaObject", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
+                    if (objectProperty.PropertyType.IsArray)
+                        invokeParams = new[] { data, thisAttribute.Name, host, objectProperty.GetValue(obj) };
+
+                    methodResult = method.Invoke(null, invokeParams);
+                }
+                else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(AsanaObjectCollection<>))
+                {
+                    method =
+                        typeof(Parsing).GetMethod("SafeAssignAsanaObjectCollection",
+                            BindingFlags.NonPublic | BindingFlags.Static)
+                            .MakeGenericMethod(new[] { type.GetGenericArguments()[0] });
+
+                    invokeParams = new[] { data, thisAttribute.Name, host, objectProperty.GetValue(obj) };
+
+                    methodResult = method.Invoke(null, invokeParams);
+                }
+                else
+                {
+                    method = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "SafeAssignArray" : "SafeAssign", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
+                    methodResult = method.Invoke(null, invokeParams);
+
+                    var isDiffMethod = typeof(Parsing).GetMethod(objectProperty.PropertyType.IsArray ? "IsDifferentArray" : "IsDifferent", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(new[] { type });
+                    var oldValue = objectProperty.GetValue(obj);
+                    var isDifferent = (isDiffMethod.Invoke(null, new[] { data, thisAttribute.Name, oldValue }) as bool?).Value;
+                    hasChanged = hasChanged || isDifferent;
+                }
+
+                // this check handle base-class properties
+                if (objectProperty.DeclaringType != obj.GetType())
+                {
+                    var baseProperty = objectProperty.DeclaringType.GetProperty(objectProperty.Name);
+                    baseProperty.SetValue(obj, methodResult, null);
+                }
+                else
+                {
+                    objectProperty.SetValue(obj, methodResult, null);
+                }
+//                if (!firstTimeObject && hasChanged)
+//                    obj.TouchChanged();
+                if (firstTimeObject || hasChanged)
+                    obj.TouchUpdated();
+            }
+            /*
             foreach(var objectProperty in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
             {
                 if (objectProperty.Name == "Host")
@@ -322,10 +414,11 @@ namespace AsanaNet
                 catch(Exception)
                 { 
                 }
-
+            
                 if (!firstTimeObject && hasChanged)
                     obj.TouchChanged();
             }
+             * */
         }
 
         //static internal T SetValueOnBaseType<T>

@@ -24,7 +24,7 @@ namespace AsanaNet
         [AsanaDataAttribute("color", SerializationFlags.Omit)]
         public string Color { get; private set; }
 
-        [AsanaDataAttribute("workspace", SerializationFlags.Required, "ID")]
+        [AsanaDataAttribute("workspace", SerializationFlags.Required, 0, "ID")]
         public virtual AsanaWorkspace Workspace
         {
             get

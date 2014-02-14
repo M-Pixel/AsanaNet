@@ -17,7 +17,7 @@ namespace AsanaNet
         [AsanaDataAttribute("archived", SerializationFlags.Optional)] //
         public bool Archived { get; set; }
 
-        [AsanaDataAttribute("workspace", SerializationFlags.Optional, "ID")]
+        [AsanaDataAttribute("workspace", SerializationFlags.Optional, 0, "ID")]
         public override AsanaWorkspace Workspace
         {
             get
@@ -42,7 +42,7 @@ namespace AsanaNet
             }
         }
 
-        [AsanaDataAttribute("team", SerializationFlags.Optional, "ID")] //
+        [AsanaDataAttribute("team", SerializationFlags.Optional, 1, "ID")] //
         public AsanaTeam Team
         {
             get
@@ -95,7 +95,6 @@ namespace AsanaNet
             }
         }
 
-
         [AsanaDataAttribute("sync_addedtask", SerializationFlags.Optional)]
         private AsanaTask _syncAddedTask
         {
@@ -119,7 +118,8 @@ namespace AsanaNet
                 if (object.ReferenceEquals(collection, null))
                     return;
                 collection.Remove(value);
-//                value.IsRemoved = true;
+//                value.TouchRemoved();
+                value.IsRemoved = true;
             }
         }
         

@@ -22,7 +22,7 @@ namespace AsanaNet
         public readonly AsanaObjectCollection<AsanaTask> FetchedTasks = new AsanaObjectCollection<AsanaTask>();
 //        public readonly AsanaObjectCollection<AsanaTeam> FetchedTeams = new AsanaObjectCollection<AsanaTeam>();
 
-        [AsanaDataAttribute("sync_addedproject", SerializationFlags.Optional)]
+        [AsanaDataAttribute("sync_addedproject")]
         private AsanaProject _syncAddedProject 
         {
             set
@@ -40,7 +40,7 @@ namespace AsanaNet
 //                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
             } 
         }
-        [AsanaDataAttribute("sync_addedtag", SerializationFlags.Optional)]
+        [AsanaDataAttribute("sync_addedtag")]
         private AsanaTag _syncAddedTag
         {
             set
@@ -54,7 +54,7 @@ namespace AsanaNet
             }
         }
 
-        [AsanaDataAttribute("sync_addedtask", SerializationFlags.Optional)]
+        [AsanaDataAttribute("sync_addedtask")]
         private AsanaTask _syncAddedTask {
             set
             {
@@ -70,13 +70,14 @@ namespace AsanaNet
             }
         }
 
-        [AsanaDataAttribute("sync_removedtask", SerializationFlags.Optional)]
+        [AsanaDataAttribute("sync_removedtask")]
         private AsanaTask _syncRemovedTask
         {
             set
             {
 //                Asana.RemoveFromAllCacheListsOfType<AsanaTask>(value, Host);
                 value.IsRemoved = true;
+//                value.TouchRemoved();
             }
         }
         
@@ -86,6 +87,7 @@ namespace AsanaNet
             set
             {
                 value.IsRemoved = true;
+//                value.TouchRemoved();
 //                if (value as AsanaProject != null)
 //                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
 //                else if (value as AsanaTag != null)
@@ -93,22 +95,24 @@ namespace AsanaNet
             }
         }
 
-        [AsanaDataAttribute("sync_removedproject", SerializationFlags.Optional)]
+        [AsanaDataAttribute("sync_removedproject")]
         private AsanaProject _syncRemovedProject
         {
             set
             {
                 value.IsRemoved = true;
+//                value.TouchRemoved();
 //                Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
             }
         }
 
-        [AsanaDataAttribute("sync_removedtag", SerializationFlags.Optional)]
+        [AsanaDataAttribute("sync_removedtag")]
         private AsanaTag _syncRemovedTag
         {
             set
             {
                 value.IsRemoved = true;
+//                value.TouchRemoved();
 //                Asana.RemoveFromAllCacheListsOfType<AsanaTag>(value, Host);
             }
         }

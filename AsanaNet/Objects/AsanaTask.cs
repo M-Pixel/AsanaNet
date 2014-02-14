@@ -21,7 +21,7 @@ namespace AsanaNet
         [AsanaDataAttribute     ("name",            SerializationFlags.Required)]
         public string           Name                { get; set; }
 
-        [AsanaDataAttribute     ("assignee",        SerializationFlags.Optional, "ID")]
+        [AsanaDataAttribute     ("assignee",        SerializationFlags.Optional, 1, "ID")]
         public AsanaUser        Assignee            { get; set; }
 
         [AsanaDataAttribute     ("assignee_status", SerializationFlags.Omit)]
@@ -87,7 +87,7 @@ namespace AsanaNet
         public AsanaWorkspace   Workspace           { get; internal set; }
         */
 
-        [AsanaDataAttribute("workspace", SerializationFlags.Required, "ID")]
+        [AsanaDataAttribute("workspace", SerializationFlags.Required, 0, "ID")]
         public AsanaWorkspace Workspace
         {
             get
@@ -165,11 +165,13 @@ namespace AsanaNet
         {
             set
             {
-                value.IsRemoved = true;
+//                value.TouchRemoved();
                 var collection = Tasks;
                 if (object.ReferenceEquals(collection, null))
                     return;
                 collection.Remove(value);
+
+                value.IsRemoved = true;
                 //                    collection.Remove(value);
                 //                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
             }
@@ -197,11 +199,12 @@ namespace AsanaNet
         {
             set
             {
-                value.IsRemoved = true;
+//                value.TouchRemoved();
                 var collection = Stories;
                 if (object.ReferenceEquals(collection, null))
                     return;
                 collection.Remove(value);
+                value.IsRemoved = true;
 //                Asana.RemoveFromAllCacheListsOfType<AsanaStory>(value, Host);
                 // 
             }

@@ -19,6 +19,7 @@ namespace AsanaNet
         void AddBannedType(Type t);
         bool Contains(string key);
         void Flush();
+        void FlushByType<T>(string startsWith = null);
         object Get(string key);
         void Remove(string key);
         List<T> GetAllOfType<T>(string keyStartsWith = null);
@@ -58,6 +59,16 @@ namespace AsanaNet
                         objectsOfT.Add((T) entry.Value);
                 }
             return objectsOfT;
+        }
+        public void FlushByType<T>(string startsWith = null)
+        {
+            foreach (var cacheEntry in MemoryCache)
+            {
+                if (!(cacheEntry.Value is T)) return;
+                if (startsWith != null && cacheEntry.Key.StartsWith(startsWith))
+                    MemoryCache.Remove(cacheEntry.Key);
+                else MemoryCache.Remove(cacheEntry.Key);
+            }
         }
         public List<object> GetAllNotStartingWith(string keyDoesntStartWith)
         {

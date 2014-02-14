@@ -9,7 +9,7 @@ namespace AsanaNet
     [Serializable]
     public partial class AsanaTag : AsanaProjectBase
     {
-        [AsanaDataAttribute     ("workspace",   SerializationFlags.Required, "ID")]
+        [AsanaDataAttribute     ("workspace",   SerializationFlags.Required, 0, "ID")]
         public override AsanaWorkspace Workspace
         {
             get
@@ -67,7 +67,7 @@ namespace AsanaNet
                 if (object.ReferenceEquals(collection, null))
                     return;
                 collection.Remove(value);
-                //                value.IsRemoved = true;
+                value.IsRemoved = true;
             }
         }
 

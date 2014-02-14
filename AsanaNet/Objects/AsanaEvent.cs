@@ -21,16 +21,16 @@ namespace AsanaNet
         private AsanaTag _syncAddedTag { set { } }
 
         [AsanaDataAttribute("sync_removedstory", SerializationFlags.Optional)]
-        private AsanaStory _syncRemovedStory { set { } }
+        private AsanaStory _syncRemovedStory { set { value.IsRemoved = true; } }
 
         [AsanaDataAttribute("sync_removedtask", SerializationFlags.Optional)]
-        private AsanaTask _syncRemovedTask { set { } }
+        private AsanaTask _syncRemovedTask { set { value.IsRemoved = true; } }
 
         [AsanaDataAttribute("sync_removedproject", SerializationFlags.Optional)]
-        private AsanaProject _syncRemovedProject { set { } }
+        private AsanaProject _syncRemovedProject { set { value.IsRemoved = true; } }
 
         [AsanaDataAttribute("sync_removedtag", SerializationFlags.Optional)]
-        private AsanaTag _syncRemovedTag { set { } }
+        private AsanaTag _syncRemovedTag { set { value.IsRemoved = true; } }
 
     }
     public class AsanaEventList : AsanaObject, IAsanaData
@@ -84,13 +84,13 @@ namespace AsanaNet
 //        public AsanaObject Resource { get; private set; }
 
         [AsanaDataAttribute("sync_changedstory", SerializationFlags.Optional)]
-        private AsanaStory _syncChangedStory { set { value.IsPossiblyOutOfSync = true; } }
+        private AsanaStory _syncChangedStory { set { value.TouchChanged(); } }
 
         [AsanaDataAttribute("sync_changedtask", SerializationFlags.Optional)]
-        private AsanaTask _syncChangedTask { set { value.IsPossiblyOutOfSync = true; } }
+        private AsanaTask _syncChangedTask { set { value.TouchChanged(); } }
 
         [AsanaDataAttribute("sync_changedprojectbase", SerializationFlags.Optional)]
-        private AsanaProjectBase _syncChangedProjectBase { set { value.IsPossiblyOutOfSync = true; } }
+        private AsanaProjectBase _syncChangedProjectBase { set { value.TouchChanged(); } }
         /*
         [AsanaDataAttribute("sync_changedproject", SerializationFlags.Optional)]
         private AsanaProject _syncChangedProject { set { value.IsPossiblyOutOfSync = true; } }

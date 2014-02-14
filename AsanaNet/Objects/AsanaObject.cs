@@ -96,17 +96,17 @@ namespace AsanaNet
         //add event handler here or in separate interface extended
 
         /// <summary>
-        /// A positive response has been received but any object updating has yet to be performed.
+        /// Object has been remotely removed.
         /// </summary>
-        public event AsanaResponseEventHandler Saving;
+        public event AsanaResponseEventHandler Removed;
 
         /// <summary>
-        /// The object was saved successfully and changes should be reflected.
+        /// The object was saved successfully and changes should be reflected in the state.
         /// </summary>
-        public event AsanaResponseEventHandler Saved;
+        public event AsanaResponseEventHandler Updated;
 
         /// <summary>
-        /// The object was changed remotely, and the changes might be reflected in the state.
+        /// The object was changed remotely, and the changes might or might not be reflected in the state.
         /// </summary>
         public event AsanaResponseEventHandler Changed;
 
@@ -116,15 +116,29 @@ namespace AsanaNet
             internal set
             {
                 _syncState = value;
-                TouchChanged();
+//                TouchChanged();
             }
         }
         private bool _syncState { get; set; }
 
         internal void TouchChanged()
         {
+//            _lastSave = Parsing.Serialize(this, false, false);
+            _syncState = true;
             if (Changed != null)
                 Changed(this);
+        }
+        internal void TouchUpdated()
+        {
+            _lastSave = Parsing.Serialize(this, false, false);
+            if (Updated != null)
+                Updated(this);
+        }
+
+        internal void TouchRemoved()
+        {
+            if (Removed != null)
+                Removed(this);
         }
 
         //        [AsanaDataAttribute("sync_removed", SerializationFlags.Optional)]
@@ -137,9 +151,15 @@ namespace AsanaNet
             internal set
             {
                 if (value)
+                {
+                    IDBeforeRemoved = ID;
                     ID = (Int64)AsanaExistance.Deleted;
+                    TouchRemoved();
+                }
             }
         }
+
+        public Int64 IDBeforeRemoved { get; set; }
 
         // memento
         private Dictionary<string, object> _lastSave;
@@ -155,6 +175,7 @@ namespace AsanaNet
             return true;
         }
 
+        /*
         internal void SavingCallback(Dictionary<string, object> saved)
         {
             _lastSave = saved;
@@ -162,19 +183,19 @@ namespace AsanaNet
             if (Saving != null)
                 Saving(this);
         }
-
         internal void SavedCallback()
         {
             if (Saved != null)
                 Saved(this);
         }
+         * */
         public virtual bool IsObjectLocal { get { return ID <= 0; } }
-
+        /*
         public void SetAsReferenceObject()
         {
             SavingCallback(Parsing.Serialize(this, false, false, true));
         }
-     
+        */
         /// <summary>
         /// Creates a new T without requiring a public constructor
         /// </summary>
@@ -320,6 +341,12 @@ namespace AsanaNet
     [Serializable]
     public class AsanaObjectCollection<T> : ObservableCollection<T>, IAsanaObjectCollection<T> where T : AsanaObject
     {
+        public bool Initialized = false;
+        public new void Add(T item)
+        {
+            if (!Initialized) Initialized = true;
+            base.Add(item);
+        }
     }
 
     static public class IAsanaObjectCollectionExtensions

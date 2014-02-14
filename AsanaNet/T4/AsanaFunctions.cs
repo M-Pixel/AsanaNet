@@ -67,7 +67,7 @@ namespace AsanaNet
                 cachedObject = (AsanaObjectCollection<AsanaUser>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null && cachedObject.Initialized) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -78,6 +78,8 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetUsers), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
+                //even if empty, we fetched it and there's nothing - we can cache it next time
+                output.Initialized = true;
 				ObjectCache.Set(cachePath, output);
 				return output;
 			}
@@ -93,7 +95,7 @@ namespace AsanaNet
                 cachedObject = (AsanaUser) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -118,7 +120,7 @@ namespace AsanaNet
                 cachedObject = (AsanaUser) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -144,7 +146,7 @@ namespace AsanaNet
                 cachedObject = (AsanaObjectCollection<AsanaWorkspace>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null && cachedObject.Initialized) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -155,6 +157,8 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetWorkspaces), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
+                //even if empty, we fetched it and there's nothing - we can cache it next time
+                output.Initialized = true;
 				ObjectCache.Set(cachePath, output);
 				return output;
 			}
@@ -169,7 +173,7 @@ namespace AsanaNet
                 cachedObject = (AsanaWorkspace) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -195,7 +199,7 @@ namespace AsanaNet
                 cachedObject = (AsanaObjectCollection<AsanaUser>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null && cachedObject.Initialized) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -206,6 +210,8 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetUsersInWorkspace), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
+                //even if empty, we fetched it and there's nothing - we can cache it next time
+                output.Initialized = true;
 				ObjectCache.Set(cachePath, output);
 				return output;
 			}
@@ -221,7 +227,7 @@ namespace AsanaNet
                 cachedObject = (AsanaObjectCollection<AsanaTask>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null && cachedObject.Initialized) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -232,6 +238,8 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTasksInWorkspace), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
+                //even if empty, we fetched it and there's nothing - we can cache it next time
+                output.Initialized = true;
 				ObjectCache.Set(cachePath, output);
 				return output;
 			}
@@ -247,7 +255,7 @@ namespace AsanaNet
                 cachedObject = (AsanaObjectCollection<AsanaProject>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null && cachedObject.Initialized) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -258,6 +266,8 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetProjectsInWorkspace), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
+                //even if empty, we fetched it and there's nothing - we can cache it next time
+                output.Initialized = true;
 				ObjectCache.Set(cachePath, output);
 				return output;
 			}
@@ -273,7 +283,7 @@ namespace AsanaNet
                 cachedObject = (AsanaObjectCollection<AsanaTag>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null && cachedObject.Initialized) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -284,6 +294,8 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTagsInWorkspace), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
+                //even if empty, we fetched it and there's nothing - we can cache it next time
+                output.Initialized = true;
 				ObjectCache.Set(cachePath, output);
 				return output;
 			}
@@ -298,7 +310,7 @@ namespace AsanaNet
                 cachedObject = (AsanaTask) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -324,7 +336,7 @@ namespace AsanaNet
                 cachedObject = (AsanaObjectCollection<AsanaTask>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null && cachedObject.Initialized) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -335,6 +347,8 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetSubtasksInTask), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
+                //even if empty, we fetched it and there's nothing - we can cache it next time
+                output.Initialized = true;
 				ObjectCache.Set(cachePath, output);
 				return output;
 			}
@@ -350,7 +364,7 @@ namespace AsanaNet
                 cachedObject = (AsanaObjectCollection<AsanaStory>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null && cachedObject.Initialized) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -361,6 +375,8 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetStoriesInTask), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
+                //even if empty, we fetched it and there's nothing - we can cache it next time
+                output.Initialized = true;
 				ObjectCache.Set(cachePath, output);
 				return output;
 			}
@@ -376,7 +392,7 @@ namespace AsanaNet
                 cachedObject = (AsanaObjectCollection<AsanaProject>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null && cachedObject.Initialized) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -387,6 +403,8 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetProjectsOnATask), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
+                //even if empty, we fetched it and there's nothing - we can cache it next time
+                output.Initialized = true;
 				ObjectCache.Set(cachePath, output);
 				return output;
 			}
@@ -402,7 +420,7 @@ namespace AsanaNet
                 cachedObject = (AsanaObjectCollection<AsanaTag>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null && cachedObject.Initialized) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -413,6 +431,8 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTagsOnATask), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
+                //even if empty, we fetched it and there's nothing - we can cache it next time
+                output.Initialized = true;
 				ObjectCache.Set(cachePath, output);
 				return output;
 			}
@@ -428,7 +448,7 @@ namespace AsanaNet
                 cachedObject = (AsanaObjectCollection<AsanaTask>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null && cachedObject.Initialized) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -439,6 +459,8 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTasksByTag), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
+                //even if empty, we fetched it and there's nothing - we can cache it next time
+                output.Initialized = true;
 				ObjectCache.Set(cachePath, output);
 				return output;
 			}
@@ -453,7 +475,7 @@ namespace AsanaNet
                 cachedObject = (AsanaStory) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -478,7 +500,7 @@ namespace AsanaNet
                 cachedObject = (AsanaProject) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -504,7 +526,7 @@ namespace AsanaNet
                 cachedObject = (AsanaObjectCollection<AsanaTask>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null && cachedObject.Initialized) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -515,6 +537,8 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTasksInAProject), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
+                //even if empty, we fetched it and there's nothing - we can cache it next time
+                output.Initialized = true;
 				ObjectCache.Set(cachePath, output);
 				return output;
 			}
@@ -529,7 +553,7 @@ namespace AsanaNet
                 cachedObject = (AsanaTag) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -555,7 +579,7 @@ namespace AsanaNet
                 cachedObject = (AsanaObjectCollection<AsanaTeam>) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null && cachedObject.Initialized) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -566,6 +590,8 @@ namespace AsanaNet
 
 				var response = await AsanaRequest.GoAsync(this, AsanaFunction.GetFunction(Function.GetTeamsInWorkspace), uri);
                 var output = AsanaRequest.GetResponseCollection(response, this, cachedObject, cacheLevel >= AsanaCacheLevel.FillExisting);
+                //even if empty, we fetched it and there's nothing - we can cache it next time
+                output.Initialized = true;
 				ObjectCache.Set(cachePath, output);
 				return output;
 			}
@@ -580,7 +606,7 @@ namespace AsanaNet
                 cachedObject = (AsanaTeam) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -606,7 +632,7 @@ namespace AsanaNet
                 cachedObject = (AsanaEventList) ObjectCache.Get(cachePath);
                 if (cacheLevel >= AsanaCacheLevel.UseExisting)
                 {
-                    if (cachedObject != null || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
+                    if ((cachedObject != null) || cacheLevel == AsanaCacheLevel.UseExistingOrNull)
                         return cachedObject;
                 }
 			    Uri uri;
@@ -713,7 +739,7 @@ public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 
 public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
-	[AsanaDataAttribute     ("users",        SerializationFlags.Optional, "ID")]
+	[AsanaDataAttribute     ("users", SerializationFlags.Omit, int.MaxValue, "ID")]
     public AsanaObjectCollection<AsanaUser> Users
     {
         get 
@@ -760,7 +786,7 @@ public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 
 public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
-	[AsanaDataAttribute     ("projects",        SerializationFlags.Optional, "ID")]
+	[AsanaDataAttribute     ("projects", SerializationFlags.Omit, int.MaxValue, "ID")]
     public AsanaObjectCollection<AsanaProject> Projects
     {
         get 
@@ -772,6 +798,10 @@ public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 		{
             if (!object.ReferenceEquals(value, null))
             {
+                foreach (var obj in value)
+                {
+                    obj.Workspace = this;
+                }
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetProjectsInWorkspace), this);
 			    Host.ObjectCache.Set(cachePath, value);
             }
@@ -797,7 +827,7 @@ public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 
 public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
-	[AsanaDataAttribute     ("tags",        SerializationFlags.Optional, "ID")]
+	[AsanaDataAttribute     ("tags", SerializationFlags.Omit, int.MaxValue, "ID")]
     public AsanaObjectCollection<AsanaTag> Tags
     {
         get 
@@ -809,6 +839,10 @@ public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 		{
             if (!object.ReferenceEquals(value, null))
             {
+                foreach (var obj in value)
+                {
+                    obj.Workspace = this;
+                }
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTagsInWorkspace), this);
 			    Host.ObjectCache.Set(cachePath, value);
             }
@@ -843,7 +877,7 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
 
 public partial class AsanaTask // : AsanaObject, IAsanaData
 {
-	[AsanaDataAttribute     ("tasks",        SerializationFlags.Optional, "ID")]
+	[AsanaDataAttribute     ("tasks", SerializationFlags.Omit, int.MaxValue, "ID")]
     public AsanaObjectCollection<AsanaTask> Tasks
     {
         get 
@@ -855,6 +889,10 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
 		{
             if (!object.ReferenceEquals(value, null))
             {
+                foreach (var obj in value)
+                {
+                    obj.Workspace = Workspace;
+                }
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetSubtasksInTask), this);
 			    Host.ObjectCache.Set(cachePath, value);
             }
@@ -880,7 +918,7 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
 
 public partial class AsanaTask // : AsanaObject, IAsanaData
 {
-	[AsanaDataAttribute     ("stories",        SerializationFlags.Optional, "ID")]
+	[AsanaDataAttribute     ("stories", SerializationFlags.Omit, int.MaxValue, "ID")]
     public AsanaObjectCollection<AsanaStory> Stories
     {
         get 
@@ -917,7 +955,7 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
 
 public partial class AsanaTask // : AsanaObject, IAsanaData
 {
-	[AsanaDataAttribute     ("projects",        SerializationFlags.Optional, "ID")]
+	[AsanaDataAttribute     ("projects", SerializationFlags.Omit, int.MaxValue, "ID")]
     public AsanaObjectCollection<AsanaProject> Projects
     {
         get 
@@ -929,6 +967,10 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
 		{
             if (!object.ReferenceEquals(value, null))
             {
+                foreach (var obj in value)
+                {
+                    obj.Workspace = Workspace;
+                }
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetProjectsOnATask), this);
 			    Host.ObjectCache.Set(cachePath, value);
             }
@@ -944,7 +986,7 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
 
 public partial class AsanaTask // : AsanaObject, IAsanaData
 {
-	[AsanaDataAttribute     ("tags",        SerializationFlags.Optional, "ID")]
+	[AsanaDataAttribute     ("tags", SerializationFlags.Omit, int.MaxValue, "ID")]
     public AsanaObjectCollection<AsanaTag> Tags
     {
         get 
@@ -956,6 +998,10 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
 		{
             if (!object.ReferenceEquals(value, null))
             {
+                foreach (var obj in value)
+                {
+                    obj.Workspace = Workspace;
+                }
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTagsOnATask), this);
 			    Host.ObjectCache.Set(cachePath, value);
             }
@@ -971,7 +1017,7 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
 
 public partial class AsanaTag // : AsanaObject, IAsanaData
 {
-	[AsanaDataAttribute     ("tasks",        SerializationFlags.Optional, "ID")]
+	[AsanaDataAttribute     ("tasks", SerializationFlags.Omit, int.MaxValue, "ID")]
     public AsanaObjectCollection<AsanaTask> Tasks
     {
         get 
@@ -983,6 +1029,10 @@ public partial class AsanaTag // : AsanaObject, IAsanaData
 		{
             if (!object.ReferenceEquals(value, null))
             {
+                foreach (var obj in value)
+                {
+                    obj.Workspace = Workspace;
+                }
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTasksByTag), this);
 			    Host.ObjectCache.Set(cachePath, value);
             }
@@ -1016,7 +1066,7 @@ public partial class AsanaProject // : AsanaObject, IAsanaData
 
 public partial class AsanaProject // : AsanaObject, IAsanaData
 {
-	[AsanaDataAttribute     ("tasks",        SerializationFlags.Optional, "ID")]
+	[AsanaDataAttribute     ("tasks", SerializationFlags.Omit, int.MaxValue, "ID")]
     public AsanaObjectCollection<AsanaTask> Tasks
     {
         get 
@@ -1028,6 +1078,10 @@ public partial class AsanaProject // : AsanaObject, IAsanaData
 		{
             if (!object.ReferenceEquals(value, null))
             {
+                foreach (var obj in value)
+                {
+                    obj.Workspace = Workspace;
+                }
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTasksInAProject), this);
 			    Host.ObjectCache.Set(cachePath, value);
             }
@@ -1052,7 +1106,7 @@ public partial class AsanaTag // : AsanaObject, IAsanaData
 
 public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 {
-	[AsanaDataAttribute     ("teams",        SerializationFlags.Optional, "ID")]
+	[AsanaDataAttribute     ("teams", SerializationFlags.Omit, int.MaxValue, "ID")]
     public AsanaObjectCollection<AsanaTeam> Teams
     {
         get 
@@ -1064,6 +1118,10 @@ public partial class AsanaWorkspace // : AsanaObject, IAsanaData
 		{
             if (!object.ReferenceEquals(value, null))
             {
+                foreach (var obj in value)
+                {
+                    obj.Workspace = this;
+                }
 			    string cachePath = Asana.GetAsanaPartUri(AsanaFunction.GetFunction(Function.GetTeamsInWorkspace), this);
 			    Host.ObjectCache.Set(cachePath, value);
             }
@@ -1267,7 +1325,7 @@ public partial class AsanaTask // : AsanaObject, IAsanaData
                 IsRemoved = true; // invokes destroying all of the references to this object
 /*
                 //Asana.RemoveFromAllCacheListsOfType<AsanaTask>(this, Host);
-                var listsPossiblyContainingThis = Host._objectCache.GetAllOfType<AsanaObjectCollection<AsanaTask>>("/");
+                var listsPossiblyContainingThis = Host.ObjectCache.GetAllOfType<AsanaObjectCollection<AsanaTask>>("/");
                 foreach (var list in listsPossiblyContainingThis)
                 {
                     list.Remove(this);
@@ -1291,7 +1349,7 @@ public partial class AsanaProject // : AsanaObject, IAsanaData
                 IsRemoved = true; // invokes destroying all of the references to this object
 /*
                 //Asana.RemoveFromAllCacheListsOfType<AsanaProject>(this, Host);
-                var listsPossiblyContainingThis = Host._objectCache.GetAllOfType<AsanaObjectCollection<AsanaProject>>("/");
+                var listsPossiblyContainingThis = Host.ObjectCache.GetAllOfType<AsanaObjectCollection<AsanaProject>>("/");
                 foreach (var list in listsPossiblyContainingThis)
                 {
                     list.Remove(this);
@@ -1315,7 +1373,7 @@ public partial class AsanaStory // : AsanaObject, IAsanaData
                 IsRemoved = true; // invokes destroying all of the references to this object
 /*
                 //Asana.RemoveFromAllCacheListsOfType<AsanaStory>(this, Host);
-                var listsPossiblyContainingThis = Host._objectCache.GetAllOfType<AsanaObjectCollection<AsanaStory>>("/");
+                var listsPossiblyContainingThis = Host.ObjectCache.GetAllOfType<AsanaObjectCollection<AsanaStory>>("/");
                 foreach (var list in listsPossiblyContainingThis)
                 {
                     list.Remove(this);

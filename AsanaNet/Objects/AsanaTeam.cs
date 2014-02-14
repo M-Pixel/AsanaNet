@@ -11,8 +11,8 @@ namespace AsanaNet
         [AsanaDataAttribute("name")]
         public string Name  { get; private set; }
 
-        [AsanaDataAttribute("organization")]
-        public AsanaWorkspace Organization
+        [AsanaDataAttribute("organization", SerializationFlags.Optional, 0)]
+        public AsanaWorkspace Workspace
         {
             get
             {
@@ -41,8 +41,8 @@ namespace AsanaNet
                 if (value)
                 {
                     Asana.RemoveFromAllCacheListsOfType<AsanaTeam>(this, Host);
-                    if (!object.ReferenceEquals(Organization, null))
-                        Organization.Teams.Remove(this);
+                    if (!object.ReferenceEquals(Workspace, null))
+                        Workspace.Teams.Remove(this);
                 }
                 base.IsRemoved = value;
             }
