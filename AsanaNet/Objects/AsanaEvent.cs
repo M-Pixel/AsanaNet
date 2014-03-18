@@ -8,37 +8,37 @@ namespace AsanaNet
 {
     public class AsanaDummyObject : AsanaObject, IAsanaData
     {
-        [AsanaDataAttribute("sync_addedstory", SerializationFlags.Optional)]
+        [AsanaData("sync_addedstory", SerializationFlags.Optional)]
         private AsanaStory _syncAddedStory { set { } }
 
-        [AsanaDataAttribute("sync_addedtask", SerializationFlags.Optional)]
+        [AsanaData("sync_addedtask", SerializationFlags.Optional)]
         private AsanaTask _syncAddedTask { set { } }
 
-        [AsanaDataAttribute("sync_addedproject", SerializationFlags.Optional)]
+        [AsanaData("sync_addedproject", SerializationFlags.Optional)]
         private AsanaProject _syncAddedProject { set { } }
 
-        [AsanaDataAttribute("sync_addedtag", SerializationFlags.Optional)]
+        [AsanaData("sync_addedtag", SerializationFlags.Optional)]
         private AsanaTag _syncAddedTag { set { } }
 
-        [AsanaDataAttribute("sync_removedstory", SerializationFlags.Optional)]
+        [AsanaData("sync_removedstory", SerializationFlags.Optional)]
         private AsanaStory _syncRemovedStory { set { value.IsRemoved = true; } }
 
-        [AsanaDataAttribute("sync_removedtask", SerializationFlags.Optional)]
+        [AsanaData("sync_removedtask", SerializationFlags.Optional)]
         private AsanaTask _syncRemovedTask { set { value.IsRemoved = true; } }
 
-        [AsanaDataAttribute("sync_removedproject", SerializationFlags.Optional)]
+        [AsanaData("sync_removedproject", SerializationFlags.Optional)]
         private AsanaProject _syncRemovedProject { set { value.IsRemoved = true; } }
 
-        [AsanaDataAttribute("sync_removedtag", SerializationFlags.Optional)]
+        [AsanaData("sync_removedtag", SerializationFlags.Optional)]
         private AsanaTag _syncRemovedTag { set { value.IsRemoved = true; } }
 
     }
     public class AsanaEventList : AsanaObject, IAsanaData
     {
-        [AsanaDataAttribute("data", SerializationFlags.Optional)]
+        [AsanaData("data", SerializationFlags.Optional)]
         public AsanaObjectCollection<AsanaEventData> Data { get; private set; }
 
-        [AsanaDataAttribute("sync", SerializationFlags.Required)]
+        [AsanaData("sync", SerializationFlags.Required)]
         public string SyncToken
         {
             get;
@@ -51,7 +51,7 @@ namespace AsanaNet
 //        public event AsanaResponseEventHandler DatasetFlushAction;
 //        internal AsanaEventedObject FlushReturnObject { get; set; }
 
-        [AsanaDataAttribute("errors", SerializationFlags.Omit)]
+        [AsanaData("errors", SerializationFlags.Omit)]
         public bool PreconditionFailed
         {
             get;
@@ -68,28 +68,28 @@ namespace AsanaNet
     }
     public class AsanaEventData : AsanaObject, IAsanaData
     {
-        [AsanaDataAttribute("user")]
+        [AsanaData("user")]
         public AsanaUser User { get; private set; }
 
-        [AsanaDataAttribute("created_at")]
+        [AsanaData("created_at")]
         public AsanaDateTime CreatedAt { get; private set; }
 
-        [AsanaDataAttribute("type")]
+        [AsanaData("type")]
         public string Type { get; private set; }
 
-        [AsanaDataAttribute("action")]
+        [AsanaData("action")]
         public string Action { get; private set; }
 
 //        [AsanaDataAttribute("resource")]
 //        public AsanaObject Resource { get; private set; }
 
-        [AsanaDataAttribute("sync_changedstory", SerializationFlags.Optional)]
+        [AsanaData("sync_changedstory", SerializationFlags.Optional)]
         private AsanaStory _syncChangedStory { set { value.TouchChanged(); } }
 
-        [AsanaDataAttribute("sync_changedtask", SerializationFlags.Optional)]
+        [AsanaData("sync_changedtask", SerializationFlags.Optional)]
         private AsanaTask _syncChangedTask { set { value.TouchChanged(); } }
 
-        [AsanaDataAttribute("sync_changedprojectbase", SerializationFlags.Optional)]
+        [AsanaData("sync_changedprojectbase", SerializationFlags.Optional)]
         private AsanaProjectBase _syncChangedProjectBase { set { value.TouchChanged(); } }
         /*
         [AsanaDataAttribute("sync_changedproject", SerializationFlags.Optional)]
@@ -98,7 +98,7 @@ namespace AsanaNet
         [AsanaDataAttribute("sync_changedtag", SerializationFlags.Optional)]
         private AsanaTag _syncChangedTag { set { value.IsPossiblyOutOfSync = true; } }
         */
-        [AsanaDataAttribute("parent")]
+        [AsanaData("parent")]
         public AsanaObject Parent { get; private set; }
     }
 }

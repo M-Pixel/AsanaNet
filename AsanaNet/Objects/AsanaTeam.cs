@@ -8,10 +8,10 @@ namespace AsanaNet
     [Serializable]
     public partial class AsanaTeam : AsanaObject, IAsanaData
     {
-        [AsanaDataAttribute("name")]
+        [AsanaData("name")]
         public string Name  { get; private set; }
 
-        [AsanaDataAttribute("organization", SerializationFlags.Optional, 0)]
+        [AsanaData("organization", SerializationFlags.Optional, 0)]
         public AsanaWorkspace Workspace
         {
             get
@@ -21,15 +21,19 @@ namespace AsanaNet
             internal set
             {
                 _organization = value;
-                if (!IsObjectLocal)
-                {
-                    var collection = value.Teams;
-                    if (object.ReferenceEquals(collection, null))
-                        return;
-                    if (!collection.Contains(this))
-                        collection.Add(this);
-                }
             }
+        }
+        internal override void TouchUpdated()
+        {
+            if (!IsObjectLocal && !ReferenceEquals(Workspace, null))
+            {
+                var collection = Workspace.Teams;
+                if (ReferenceEquals(collection, null))
+                    return;
+                if (!collection.Contains(this))
+                    collection.Add(this);
+            }
+            base.TouchUpdated();
         }
 
         internal AsanaWorkspace _organization { get; set; }
@@ -41,7 +45,7 @@ namespace AsanaNet
                 if (value)
                 {
                     Asana.RemoveFromAllCacheListsOfType<AsanaTeam>(this, Host);
-                    if (!object.ReferenceEquals(Workspace, null))
+                    if (!ReferenceEquals(Workspace, null))
                         Workspace.Teams.Remove(this);
                 }
                 base.IsRemoved = value;

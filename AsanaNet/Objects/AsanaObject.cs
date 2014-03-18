@@ -37,12 +37,13 @@ namespace AsanaNet
         }
         protected virtual void DatasetCacheFlushAction(AsanaObject response)
         {
-            if (!object.ReferenceEquals(Host, null))
+            if (!ReferenceEquals(Host, null))
             {
                 var allCachedObjects = Host.ObjectCache.GetAllNotStartingWith("/");
-                foreach (AsanaObject obj in allCachedObjects)
+                foreach (object obj in allCachedObjects)
                 {
-                    obj.IsPossiblyOutOfSync = true;
+                    if (obj is AsanaObject)
+                        ((AsanaObject)obj).IsPossiblyOutOfSync = true;
                 }
             }
         }
@@ -53,13 +54,14 @@ namespace AsanaNet
         public Task Sync(string optFields = "created_at,type,resource,resource.name,resource.tags,resource.tags.name,resource.tags.workspace,resource.followers,resource.target,resource.text,parent,parent.name")
         {
 //            if (object.ReferenceEquals(EventList))
-            return Host.GetEvents(this, ReferenceEquals(EventList, null) ? "0" : EventList.SyncToken, optFields,
-                AsanaCacheLevel.Ignore)
-                .ContinueWith(
+            var task = Host.GetEvents(this, ReferenceEquals(EventList, null) ? "0" : EventList.SyncToken, optFields,
+                AsanaCacheLevel.Ignore);
+            task.ContinueWith(
                     (eventList) =>
                     {
                         EventList = eventList.Result;
                     });
+            return task;
         }
     }
 
@@ -88,7 +90,7 @@ namespace AsanaNet
     [Serializable]
     public abstract class AsanaObject
     {
-        [AsanaDataAttribute("id", SerializationFlags.Omit)]
+        [AsanaData("id", SerializationFlags.Omit)]
         public Int64 ID { get; internal set; }
 
         public Asana Host { get; internal set; }
@@ -128,9 +130,10 @@ namespace AsanaNet
             if (Changed != null)
                 Changed(this);
         }
-        internal void TouchUpdated()
+        internal virtual void TouchUpdated()
         {
-            _lastSave = Parsing.Serialize(this, false, false);
+            _lastSave = Parsing.Serialize(this, false, false, true);
+
             if (Updated != null)
                 Updated(this);
         }
@@ -207,7 +210,7 @@ namespace AsanaNet
                 AsanaObject o = (AsanaObject)Activator.CreateInstance(t == typeof(AsanaObject) ? typeof(AsanaDummyObject) : t, true);
                 return o;
             }
-            catch (System.Exception)
+            catch (Exception)
             {
                 return null;
             }
@@ -296,11 +299,11 @@ namespace AsanaNet
         {
             if (obj is AsanaObject)
             {
-                return this.ID == (obj as AsanaObject).ID;
+                return ID == (obj as AsanaObject).ID;
             }
             if (obj is Int64)
             {
-                return this.ID == (Int64)obj;
+                return ID == (Int64)obj;
             }
 
             return false;
@@ -339,6 +342,7 @@ namespace AsanaNet
 
     // new version
     [Serializable]
+    // TODO: consider http://stackoverflow.com/questions/670577/observablecollection-doesnt-support-addrange-method-so-i-get-notified-for-each
     public class AsanaObjectCollection<T> : ObservableCollection<T>, IAsanaObjectCollection<T> where T : AsanaObject
     {
         public bool Initialized = false;

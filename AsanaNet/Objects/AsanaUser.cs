@@ -8,13 +8,13 @@ namespace AsanaNet
     [Serializable]
     public partial class AsanaUser : AsanaObject, IAsanaData
     {
-        [AsanaDataAttribute("name")]
+        [AsanaData("name")]
         public string           Name            { get; private set; }
 
-        [AsanaDataAttribute("email")]
+        [AsanaData("email")]
         public string           Email           { get; private set; }
 
-        [AsanaDataAttribute("workspaces")]
+        [AsanaData("workspaces")]
         public AsanaObjectCollection<AsanaWorkspace> Workspaces { get; private set; }
 
         // ------------------------------------------------------

@@ -18,40 +18,40 @@ namespace AsanaNet
     [Serializable]
     public partial class AsanaTask : AsanaEventedObject, IAsanaData
     {
-        [AsanaDataAttribute     ("name",            SerializationFlags.Required)]
+        [AsanaData     ("name",            SerializationFlags.Required)]
         public string           Name                { get; set; }
 
-        [AsanaDataAttribute     ("assignee",        SerializationFlags.Optional, 1, "ID")]
+        [AsanaData     ("assignee",        SerializationFlags.Optional, 1, "ID")]
         public AsanaUser        Assignee            { get; set; }
 
-        [AsanaDataAttribute     ("assignee_status", SerializationFlags.Omit)]
+        [AsanaData     ("assignee_status", SerializationFlags.Omit)]
         public AssigneeStatus   AssigneeStatus      { get; set; }
 
-        [AsanaDataAttribute     ("created_at",      SerializationFlags.Omit)]
+        [AsanaData     ("created_at",      SerializationFlags.Omit)]
         public AsanaDateTime    CreatedAt           { get; private set; }
 
-        [AsanaDataAttribute     ("completed",       SerializationFlags.Omit)]
+        [AsanaData     ("completed",       SerializationFlags.Omit)]
         public bool             Completed           { get; set; }
 
-        [AsanaDataAttribute     ("completed_at",    SerializationFlags.Omit)]
+        [AsanaData     ("completed_at",    SerializationFlags.Omit)]
         public AsanaDateTime    CompletedAt         { get; private set; }
 
-        [AsanaDataAttribute     ("due_on",          SerializationFlags.Optional)]
+        [AsanaData     ("due_on",          SerializationFlags.Optional)]
         public AsanaDateTime    DueOn               { get; set; }
 
-        [AsanaDataAttribute     ("followers",       SerializationFlags.Optional)]
+        [AsanaData     ("followers",       SerializationFlags.Omit)]
         public AsanaObjectCollection<AsanaUser>      Followers           { get; private set; }
 
-        [AsanaDataAttribute     ("modified_at",     SerializationFlags.Omit)]
+        [AsanaData     ("modified_at",     SerializationFlags.Omit)]
         public AsanaDateTime    ModifiedAt          { get; private set; }
 
-        [AsanaDataAttribute     ("notes",           SerializationFlags.Optional)]
+        [AsanaData     ("notes",           SerializationFlags.Optional)]
         public string           Notes               { get; set; }
 
 //        [AsanaDataAttribute     ("parent",          SerializationFlags.Optional)]
 //        public AsanaTask        Parent              { get; internal set; }
 
-        [AsanaDataAttribute("parent", SerializationFlags.Optional)]
+        [AsanaData("parent", SerializationFlags.Optional)]
         public AsanaTask Parent
         {
             get
@@ -60,20 +60,39 @@ namespace AsanaNet
             }
             internal set
             {
-                if (object.ReferenceEquals(value, null))
+                if (ReferenceEquals(value, null))
                     return;
 
                 _parent = value;
 
-                if (!IsObjectLocal)
+                if (!ReferenceEquals(value.Workspace, null))
+                    Workspace = value.Workspace;
+            }
+        }
+        internal override void TouchUpdated()
+        {
+            if (!IsObjectLocal)
+            {
+                if (!ReferenceEquals(Parent, null))
                 {
-                    var collection = value.Tasks;
-                    if (object.ReferenceEquals(collection, null))
+                    var collection = Parent.Tasks;
+                    if (ReferenceEquals(collection, null))
+                        return;
+                    if (!collection.Contains(this))
+                        collection.Add(this);
+                }
+
+                if (!ReferenceEquals(Workspace, null))
+                {
+                    var collection = Workspace.FetchedTasks;
+                    if (ReferenceEquals(collection, null))
                         return;
                     if (!collection.Contains(this))
                         collection.Add(this);
                 }
             }
+
+            base.TouchUpdated();
         }
         internal AsanaTask _parent { get; set; }
 
@@ -87,7 +106,7 @@ namespace AsanaNet
         public AsanaWorkspace   Workspace           { get; internal set; }
         */
 
-        [AsanaDataAttribute("workspace", SerializationFlags.Required, 0, "ID")]
+        [AsanaData("workspace", SerializationFlags.Required, 0, "ID")]
         public AsanaWorkspace Workspace
         {
             get
@@ -96,17 +115,9 @@ namespace AsanaNet
             }
             internal set
             {
-                if (object.ReferenceEquals(value, null))
+                if (ReferenceEquals(value, null))
                     return;
                 _workspace = value;
-                if (!IsObjectLocal)
-                {
-                    var collection = value.FetchedTasks;
-                    if (object.ReferenceEquals(collection, null))
-                        return;
-                    if (!collection.Contains(this))
-                        collection.Add(this);
-                }
             }
         }
 
@@ -120,7 +131,7 @@ namespace AsanaNet
                 if (value)
                 {
                     Asana.RemoveFromAllCacheListsOfType<AsanaTask>(this, Host);
-                    if (!object.ReferenceEquals(Workspace, null))
+                    if (!ReferenceEquals(Workspace, null))
                         Workspace.FetchedTasks.Remove(this);
                 }
                 base.IsRemoved = value;
@@ -144,13 +155,13 @@ namespace AsanaNet
             }
         }
         */
-        [AsanaDataAttribute("sync_addedtask", SerializationFlags.Optional)]
+        [AsanaData("sync_addedtask", SerializationFlags.Optional)]
         internal AsanaTask _syncAddedSubTask
         {
             set
             {
                 var collection = Tasks;
-                if (object.ReferenceEquals(collection, null))
+                if (ReferenceEquals(collection, null))
                     return;
 //                if (!value.IsRemoved)
 //                {
@@ -160,14 +171,14 @@ namespace AsanaNet
                 //                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
             }
         }
-        [AsanaDataAttribute("sync_removedtask", SerializationFlags.Optional)]
+        [AsanaData("sync_removedtask", SerializationFlags.Optional)]
         internal AsanaTask _syncRemovedSubTask
         {
             set
             {
 //                value.TouchRemoved();
                 var collection = Tasks;
-                if (object.ReferenceEquals(collection, null))
+                if (ReferenceEquals(collection, null))
                     return;
                 collection.Remove(value);
 
@@ -177,13 +188,13 @@ namespace AsanaNet
             }
         }
 
-        [AsanaDataAttribute("sync_addedstory", SerializationFlags.Optional)]
+        [AsanaData("sync_addedstory", SerializationFlags.Optional)]
         internal AsanaStory _syncAddedStory
         {
             set
             {
                 var collection = Stories;
-                if (object.ReferenceEquals(collection, null))
+                if (ReferenceEquals(collection, null))
                     return;
 //                if (!value.IsRemoved)
 //                {
@@ -194,14 +205,14 @@ namespace AsanaNet
                 //                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
             }
         }
-        [AsanaDataAttribute("sync_removedstory", SerializationFlags.Optional)]
+        [AsanaData("sync_removedstory", SerializationFlags.Optional)]
         internal AsanaStory _syncRemovedStory
         {
             set
             {
 //                value.TouchRemoved();
                 var collection = Stories;
-                if (object.ReferenceEquals(collection, null))
+                if (ReferenceEquals(collection, null))
                     return;
                 collection.Remove(value);
                 value.IsRemoved = true;

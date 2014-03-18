@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.ComponentModel;
@@ -18,7 +19,8 @@ namespace AsanaNet
         /// <returns></returns>
         static public string SafeAssignString(Dictionary<string, object> source, string name)
         {
-            if (source.ContainsKey(name))
+            //Debug.Assert(!source.ContainsKey(name) || (source.ContainsKey(name) && !ReferenceEquals(source[name], null)));
+            if (source.ContainsKey(name) && !ReferenceEquals(source[name], null))
             {
                 return source[name].ToString();
             }
@@ -100,7 +102,7 @@ namespace AsanaNet
                 if (obj.ContainsKey("id"))
                     thisId = (Int64) obj["id"];
                 value = (T)AsanaObject.Create(typeof(T), thisId, host);
-                Parsing.Deserialize(obj, (value as AsanaObject), host);
+                Deserialize(obj, (value as AsanaObject), host);
             }
 
             return value;
@@ -124,6 +126,8 @@ namespace AsanaNet
                 if (value == null)
                     value = new AsanaObjectCollection<T>();
 
+//                var newObjects = new List<T>(list.Count);
+
                 //value = new T[list.Count];
                 for (int i = 0; i < list.Count; ++i)
                 {
@@ -140,9 +144,10 @@ namespace AsanaNet
                     {
                         listElement = (T)AsanaObject.Create(typeof(T), 0, host);
                     }
-                    Parsing.Deserialize(obj, listElement, host);
+                    Deserialize(obj, listElement, host);
 
                     if (!value.Contains(listElement))
+//                        newObjects.Add(listElement);
                         value.Add(listElement);
 
 //                    T newObj = (T)AsanaObject.Create(typeof(T));
@@ -254,7 +259,7 @@ namespace AsanaNet
                 (from objectProperty in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
                 where objectProperty.GetCustomAttributesData().Any(attr => attr.AttributeType == typeof (AsanaDataAttribute))
                     // && objectProperty.Name != "Host"
-                group objectProperty by objectProperty.GetCustomAttributes(typeof (AsanaDataAttribute), false))
+                group objectProperty by objectProperty.GetCustomAttributes(typeof (AsanaDataAttribute), true)) // was false
                 .ToDictionary(group => group.FirstOrDefault(), group =>
                 {
                     if (group.Key.Length == 0) return null;
@@ -278,7 +283,8 @@ namespace AsanaNet
                 {
                     var oldValue = objectProperty.GetValue(obj) as string;
                     var newValue = SafeAssignString(data, thisAttribute.Name);
-                    objectProperty.SetValue(obj, newValue, null);
+                    if (oldValue != newValue)
+                        objectProperty.SetValue(obj, newValue, null);
                     hasChanged = hasChanged || oldValue != newValue;
                     continue;
                 }
@@ -331,9 +337,9 @@ namespace AsanaNet
                 }
 //                if (!firstTimeObject && hasChanged)
 //                    obj.TouchChanged();
-                if (firstTimeObject || hasChanged)
-                    obj.TouchUpdated();
             }
+            if (firstTimeObject || hasChanged)
+                obj.TouchUpdated();
             /*
             foreach(var objectProperty in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
             {
@@ -436,7 +442,7 @@ namespace AsanaNet
             {
                 try
                 {
-                    var cas = p.GetCustomAttributes(typeof(AsanaDataAttribute), false);
+                    var cas = p.GetCustomAttributes(typeof(AsanaDataAttribute), true); // was false
                     if (cas.Length == 0)
                         continue;
 
@@ -502,7 +508,9 @@ namespace AsanaNet
             }
             else if (value.GetType() == typeof(string))
             {
-                if (string.IsNullOrWhiteSpace(value as string))
+                // explanation: we need to be able to delete a string too!
+                if ((value as string) == null)
+                //if (string.IsNullOrEmpty(value as string))
                     present = false;
             }
             else if (value.GetType() == typeof(DateTime))

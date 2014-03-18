@@ -100,6 +100,9 @@ namespace AsanaNet
         }
         public void Add(string key, object value, TimeSpan timeout)
         {
+            if (ReferenceEquals(value, null)) 
+                throw new NullReferenceException("Trying to cache a null object.");
+
             if (!BannedTypes.Contains(value.GetType()))
             {
                 var policy = new CacheItemPolicy
@@ -111,6 +114,9 @@ namespace AsanaNet
         }
         public void Add(string key, object value)
         {
+            if (ReferenceEquals(value, null))
+                throw new NullReferenceException("Trying to cache a null object.");
+
             if (!BannedTypes.Contains(value.GetType()))
             {
                 MemoryCache.Add(PrefixedKey(key), value, new CacheItemPolicy());

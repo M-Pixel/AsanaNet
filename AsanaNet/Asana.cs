@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Net;
 using System.Web;
@@ -22,7 +24,44 @@ namespace AsanaNet
 		Basic,
 		OAuth
 	}
+    /*
+    public class ApiKey : INotifyPropertyChanged
+    {
+      private string _key;
+      // Declare the event 
+      public event PropertyChangedEventHandler PropertyChanged;
 
+      public ApiKey()
+      {
+      }
+
+      public ApiKey(string value)
+      {
+          this._key = value;
+      }
+
+      public string Key
+      {
+          get { return _key; }
+          set
+          {
+              _key = value;
+              // Call OnPropertyChanged whenever the property is updated
+              OnPropertyChanged("Key");
+          }
+      }
+
+      // Create the OnPropertyChanged method to raise the event 
+      protected void OnPropertyChanged(string name)
+      {
+          PropertyChangedEventHandler handler = PropertyChanged;
+          if (handler != null)
+          {
+              handler(this, new PropertyChangedEventArgs(name));
+          }
+      }
+    }
+    */
     [Serializable]
     public partial class Asana
     {        
@@ -45,16 +84,23 @@ namespace AsanaNet
 
         public AsanaCacheLevel DefaultCacheLevel = AsanaCacheLevel.UseExisting;
 
+        public HttpStatusCode[] NoRetryStatusCodes = { HttpStatusCode.Forbidden, HttpStatusCode.MethodNotAllowed, HttpStatusCode.RequestUriTooLong, HttpStatusCode.Unauthorized };
+
         public int AutoRetryCount;
 
         #endregion
 
         #region Properties
 
-		/// <summary>
-		/// The Authentication Type used for API access
-		/// </summary>
-		public AuthenticationType AuthType { get; private set; }
+        /// <summary>
+        /// The Authentication Type used for API access
+        /// </summary>
+        public AuthenticationType AuthType { get; set; }
+
+        public Func<string> ApiKeyOrBearerToken { get; set; }
+
+        /*
+        public AuthenticationHeaderValue AuthenticationHeader { get; set; }
 
         /// <summary>
         /// The API Key assigned object
@@ -66,46 +112,54 @@ namespace AsanaNet
         /// </summary>
         public string EncodedAPIKey { get; private set; }
 
-		/// <summary>
-		/// The OAuth Bearer Token assigned object
-		/// </summary>
-		public string OAuthToken { get; set; }
-
-        public bool Sync = true;
+        /// <summary>
+        /// The OAuth Bearer Token assigned object
+        /// </summary>
+        public string OAuthToken { get; set; }
+        */
 
         #endregion        
 
         #region Methods
 
+        internal void GenerateAuthenticationHeader()
+        {
+            var apiKeyOrBearerToken = ApiKeyOrBearerToken();
+            string encodedApiKey = String.Empty;
+            if (AuthType != AuthenticationType.OAuth)
+            {
+                encodedApiKey = Convert.ToBase64String(Encoding.ASCII.GetBytes(apiKeyOrBearerToken + ":"));
+            }
+
+            var defaultAuth = new AuthenticationHeaderValue(AuthType == AuthenticationType.OAuth ? "Bearer" : "Basic", AuthType == AuthenticationType.OAuth ? apiKeyOrBearerToken : encodedApiKey);
+            BaseHttpClient.DefaultRequestHeaders.Authorization = defaultAuth;
+        }
+
+        static Asana()
+        {
+            AsanaFunction.InitFunctions();
+        }
+
         /// <summary>
         /// Creates a new Asana entry point.
         /// </summary>
 		/// <param name="apiKeyOrBearerToken">The API key (for Basic authentication) or Bearer Token (for OAuth authentication) for the account we intend to access</param>
-		public Asana(string apiKeyOrBearerToken, AuthenticationType authType, Action<string, string, HttpStatusCode, string, int> errorCallback, int autoRetryCount = 3, IAsanaCache cache = null, AsanaCacheLevel defaultCacheLevel = AsanaCacheLevel.UseExisting)
+		public Asana(Func<string> apiKeyOrBearerToken, AuthenticationType authType, Action<string, string, HttpStatusCode, string, int> errorCallback, int autoRetryCount = 3, IAsanaCache cache = null, AsanaCacheLevel defaultCacheLevel = AsanaCacheLevel.UseExisting)
         {   
             _baseUrl = "https://app.asana.com/api/1.0";
             _errorCallback = errorCallback;
             AutoRetryCount = autoRetryCount;
             ObjectCache = cache ?? new MemCache(Guid.NewGuid() + "/");
             DefaultCacheLevel = defaultCacheLevel;
+
             ObjectCache.AddBannedType(typeof(AsanaDummyObject));
             ObjectCache.AddBannedType(typeof(AsanaProjectBase));
 
 			AuthType = authType;
-			if (AuthType == AuthenticationType.OAuth) {
-				OAuthToken = apiKeyOrBearerToken;
-			} else {
-				APIKey = apiKeyOrBearerToken;
-				EncodedAPIKey = Convert.ToBase64String (System.Text.Encoding.ASCII.GetBytes(apiKeyOrBearerToken + ":"));
-			}
+            ApiKeyOrBearerToken = apiKeyOrBearerToken;
 
-            var defaultAuth = new System.Net.Http.Headers.AuthenticationHeaderValue(AuthType == AuthenticationType.OAuth ? "Bearer" : "Basic", AuthType == AuthenticationType.OAuth ? OAuthToken : EncodedAPIKey);
-            BaseHttpClient.DefaultRequestHeaders.Authorization = defaultAuth;
-			BaseHttpClient.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("AsanaNet", "1.1-async"));
-            BaseHttpClient.DefaultRequestHeaders.Accept.Add(
-                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-
-            AsanaFunction.InitFunctions();
+			BaseHttpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("AsanaNet", "1.1-async"));
+            BaseHttpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
         private Uri GetBaseUri(AsanaFunction function, params object[] obj)
@@ -377,7 +431,8 @@ namespace AsanaNet
         }
         */
         #endregion
-        public static void RemoveFromAllCacheListsOfType<T>(AsanaObject obj, Asana Host) where T : AsanaObject
+
+        internal static void RemoveFromAllCacheListsOfType<T>(AsanaObject obj, Asana Host) where T : AsanaObject
         {
             var listsPossiblyContainingThis = Host.ObjectCache.GetAllOfType<AsanaObjectCollection<T>>("/");
             foreach (var list in listsPossiblyContainingThis)
@@ -389,6 +444,13 @@ namespace AsanaNet
             
 //            obj.ID = (Int64)AsanaExistance.Deleted;
         }
+        public Type GetCacheTypeById(long id)
+        {
+            var obj = ObjectCache.Get(id.ToString());
+            if (obj == null)
+                return null;
+            return obj.GetType();
+        }
     }
     public enum AsanaCacheLevel
     {
@@ -396,6 +458,6 @@ namespace AsanaNet
         FillExisting = 1, // If Possible
         UseExisting = 2, // If Possible
         UseExistingOrNull = 3, 
-        Default = AsanaCacheLevel.UseExisting
+        Default = UseExisting
     }
 }

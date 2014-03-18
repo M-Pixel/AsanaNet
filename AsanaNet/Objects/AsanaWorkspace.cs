@@ -10,26 +10,26 @@ namespace AsanaNet
     [Serializable]
     public partial class AsanaWorkspace : AsanaEventedObject, IAsanaData
     {
-        [AsanaDataAttribute("name")]
+        [AsanaData("name")]
         public string Name  { get; private set; }
 
-        [AsanaDataAttribute("is_organization")]
+        [AsanaData("is_organization")]
         public bool? IsOrganization { get; private set; }
 
-        [AsanaDataAttribute("email_domains")]
+        [AsanaData("email_domains")]
         public string[] EmailDomains { get; private set; }
 
         public readonly AsanaObjectCollection<AsanaTask> FetchedTasks = new AsanaObjectCollection<AsanaTask>();
 //        public readonly AsanaObjectCollection<AsanaTeam> FetchedTeams = new AsanaObjectCollection<AsanaTeam>();
 
-        [AsanaDataAttribute("sync_addedproject")]
+        [AsanaData("sync_addedproject")]
         private AsanaProject _syncAddedProject 
         {
             set
             {
                 value._workspace = this;
                 var collection = Projects;
-                if (object.ReferenceEquals(collection, null))
+                if (ReferenceEquals(collection, null))
                     return;
 //                if (!value.IsRemoved)
 //                {
@@ -40,27 +40,27 @@ namespace AsanaNet
 //                    Asana.RemoveFromAllCacheListsOfType<AsanaProject>(value, Host);
             } 
         }
-        [AsanaDataAttribute("sync_addedtag")]
+        [AsanaData("sync_addedtag")]
         private AsanaTag _syncAddedTag
         {
             set
             {
                 value._workspace = this;
                 var collection = Tags;
-                if (object.ReferenceEquals(collection, null))
+                if (ReferenceEquals(collection, null))
                     return;
                 if (!collection.Contains(value))
                     collection.Add(value);
             }
         }
 
-        [AsanaDataAttribute("sync_addedtask")]
+        [AsanaData("sync_addedtask")]
         private AsanaTask _syncAddedTask {
             set
             {
                 value._workspace = this;
                 var collection = FetchedTasks;
-                if (object.ReferenceEquals(collection, null))
+                if (ReferenceEquals(collection, null))
                     return;
 //                if (!value.IsRemoved)
 //                {
@@ -70,7 +70,7 @@ namespace AsanaNet
             }
         }
 
-        [AsanaDataAttribute("sync_removedtask")]
+        [AsanaData("sync_removedtask")]
         private AsanaTask _syncRemovedTask
         {
             set
@@ -81,7 +81,7 @@ namespace AsanaNet
             }
         }
         
-        [AsanaDataAttribute("sync_removedprojectbase", SerializationFlags.Optional)]
+        [AsanaData("sync_removedprojectbase", SerializationFlags.Optional)]
         private AsanaProjectBase _syncRemovedProjectBase
         {
             set
@@ -95,7 +95,7 @@ namespace AsanaNet
             }
         }
 
-        [AsanaDataAttribute("sync_removedproject")]
+        [AsanaData("sync_removedproject")]
         private AsanaProject _syncRemovedProject
         {
             set
@@ -106,7 +106,7 @@ namespace AsanaNet
             }
         }
 
-        [AsanaDataAttribute("sync_removedtag")]
+        [AsanaData("sync_removedtag")]
         private AsanaTag _syncRemovedTag
         {
             set

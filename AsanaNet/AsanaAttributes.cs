@@ -5,7 +5,7 @@ using System.Text;
 
 namespace AsanaNet
 {
-    [FlagsAttribute]
+    [Flags]
     public enum SerializationFlags
     {
         Optional,

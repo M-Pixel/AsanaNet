@@ -35,52 +35,52 @@ namespace AsanaNet
 
         public static bool operator ==(AsanaDateTime a, DateTime b)
         {
-            if (object.ReferenceEquals(a, null))
+            if (ReferenceEquals(a, null))
             {
-                return object.ReferenceEquals(b, null);
+                return ReferenceEquals(b, null);
             }
-            if (object.ReferenceEquals(b, null))
+            if (ReferenceEquals(b, null))
             {
-                return object.ReferenceEquals(a, null);
+                return ReferenceEquals(a, null);
             }
             return a.DateTime == b;
         }
 
         public static bool operator ==(AsanaDateTime a, AsanaDateTime b)
         {
-            if (object.ReferenceEquals(a, null))
+            if (ReferenceEquals(a, null))
             {
-                return object.ReferenceEquals(b, null);
+                return ReferenceEquals(b, null);
             }
-            if (object.ReferenceEquals(b, null))
+            if (ReferenceEquals(b, null))
             {
-                return object.ReferenceEquals(a, null);
+                return ReferenceEquals(a, null);
             }
             return a.DateTime == b.DateTime;
         }
 
         public static bool operator !=(AsanaDateTime a, DateTime b)
         {
-            if (object.ReferenceEquals(a, null))
+            if (ReferenceEquals(a, null))
             {
-                return !object.ReferenceEquals(b, null);
+                return !ReferenceEquals(b, null);
             }
-            if (object.ReferenceEquals(b, null))
+            if (ReferenceEquals(b, null))
             {
-                return !object.ReferenceEquals(a, null);
+                return !ReferenceEquals(a, null);
             }
             return a.DateTime != b;
         }
 
         public static bool operator !=(AsanaDateTime a, AsanaDateTime b)
         {
-            if (object.ReferenceEquals(a, null))
+            if (ReferenceEquals(a, null))
             {
-                return !object.ReferenceEquals(b, null);
+                return !ReferenceEquals(b, null);
             }
-            if (object.ReferenceEquals(b, null))
+            if (ReferenceEquals(b, null))
             {
-                return !object.ReferenceEquals(a, null);
+                return !ReferenceEquals(a, null);
             }
             return a.DateTime != b.DateTime;
         }
@@ -89,7 +89,7 @@ namespace AsanaNet
         {
             if (obj is DateTime)
             {
-                return this.DateTime.Equals((DateTime)obj);
+                return DateTime.Equals((DateTime)obj);
             }
             if (obj is AsanaDateTime)
             {
@@ -102,12 +102,12 @@ namespace AsanaNet
 
         public override int GetHashCode()
         {
-            return base.GetHashCode() ^ this.DateTime.GetHashCode();
+            return base.GetHashCode() ^ DateTime.GetHashCode();
         }
 
         public bool Equals(AsanaDateTime a)
         {
-            return this.DateTime.Equals(a.DateTime);
+            return DateTime.Equals(a.DateTime);
         }
 
     }

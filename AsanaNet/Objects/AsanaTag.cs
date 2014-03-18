@@ -9,7 +9,7 @@ namespace AsanaNet
     [Serializable]
     public partial class AsanaTag : AsanaProjectBase
     {
-        [AsanaDataAttribute     ("workspace",   SerializationFlags.Required, 0, "ID")]
+        [AsanaData     ("workspace",   SerializationFlags.Required, 0, "ID")]
         public override AsanaWorkspace Workspace
         {
             get
@@ -18,19 +18,27 @@ namespace AsanaNet
             }
             internal set
             {
-                if (object.ReferenceEquals(value, null))
+                if (ReferenceEquals(value, null))
                     return;
 
                 base.Workspace = value;
-                if (!IsObjectLocal)
+            }
+        }
+        internal override void TouchUpdated()
+        {
+
+            if (!IsObjectLocal)
+            {
+                if (!ReferenceEquals(Workspace, null))
                 {
-                    var collection = value.Tags;
-                    if (object.ReferenceEquals(collection, null))
+                    var collection = Workspace.Tags;
+                    if (ReferenceEquals(collection, null))
                         return;
                     if (!collection.Contains(this))
                         collection.Add(this);
                 }
             }
+            base.TouchUpdated();
         }
         public override bool IsRemoved
         {
@@ -46,28 +54,28 @@ namespace AsanaNet
             }
         }
 
-        [AsanaDataAttribute("sync_addedtask", SerializationFlags.Optional)]
+        [AsanaData("sync_addedtask", SerializationFlags.Optional)]
         private AsanaTask _syncAddedTask
         {
             set
             {
                 var collection = Tasks;
-                if (object.ReferenceEquals(collection, null))
+                if (ReferenceEquals(collection, null))
                     return;
                 if (!collection.Contains(value))
                     collection.Add(value);
             }
         }
-        [AsanaDataAttribute("sync_removedtask", SerializationFlags.Optional)]
+        [AsanaData("sync_removedtask", SerializationFlags.Optional)]
         private AsanaTask _syncRemovedTask
         {
             set
             {
                 var collection = Tasks;
-                if (object.ReferenceEquals(collection, null))
+                if (ReferenceEquals(collection, null))
                     return;
                 collection.Remove(value);
-                value.IsRemoved = true;
+                //value.IsRemoved = true;
             }
         }
 

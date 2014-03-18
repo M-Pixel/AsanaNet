@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Net;
 using System.IO;
@@ -39,81 +41,98 @@ namespace AsanaNet
         /// </summary>
         public static async Task<string> GoAsync(Asana asana, AsanaFunction function, Uri uri, HttpContent content = null, int? triesLeft = null)
         {
-            return await Task.Factory.StartNew<string>(() =>
-            {
-                if (!triesLeft.HasValue) triesLeft = asana.AutoRetryCount;
-                if (_throttling)
-                {
-                    _throttlingWaitHandle.WaitOne();
-                }
-
-                // Initalise a response object
-                HttpResponseMessage response = null;
-
-                if (function.Method != "GET" && content == null)
-                {
-//                    content = new StringContent(null, Encoding.UTF8, "application/json");
-                    content = new StringContent(String.Empty);
-                    content.Headers.ContentType =
-                        new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
-                }
-                try // in case of DNS failure
-                {
-                    switch (function.Method)
+//                return await Task.Factory.StartNew(() => // TODO: try async ?
+//                {
+                    if (!triesLeft.HasValue) triesLeft = asana.AutoRetryCount;
+                    if (_throttling)
                     {
-                        default: //GET
-                            response = asana.BaseHttpClient.GetAsync(uri).Result;
-                            break;
-                        case "POST":
-                            response = asana.BaseHttpClient.PostAsync(uri, content).Result;
-                            break;
-                        case "PUT":
-                            response = asana.BaseHttpClient.PutAsync(uri, content).Result;
-                            break;
-                        case "DELETE":
-                            response = asana.BaseHttpClient.DeleteAsync(uri).Result;
-                            break;
+                        _throttlingWaitHandle.WaitOne();
                     }
-                }
-                catch (Exception e)
-                {
-                    asana.ErrorCallback(function.Method, uri.AbsoluteUri, HttpStatusCode.RequestTimeout, e.InnerException.InnerException.Message, triesLeft.Value);
-                    if (triesLeft > 1)
-                        return GoAsync(asana, function, uri, content, triesLeft - 1).Result;
-                    else
-                        throw;
-                }
-                if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.PreconditionFailed)
-                {
+
+                    // Initalise a response object
+                    HttpResponseMessage response = null;
+
+                    if (function.Method != "GET" && content == null)
+                    {
+                        //                    content = new StringContent(null, Encoding.UTF8, "application/json");
+                        content = new StringContent(String.Empty);
+                        content.Headers.ContentType =
+                            new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+                    }
+
+                    asana.GenerateAuthenticationHeader();
+
+                    ExceptionDispatchInfo capturedException = null;
+                    try // in case of DNS failure
+                    {
+                        switch (function.Method)
+                        {
+                            default: //GET
+                                response = await asana.BaseHttpClient.GetAsync(uri);
+                                break;
+                            case "POST":
+                                response = await asana.BaseHttpClient.PostAsync(uri, content);
+                                break;
+                            case "PUT":
+                                response = await asana.BaseHttpClient.PutAsync(uri, content);
+                                break;
+                            case "DELETE":
+                                response = await asana.BaseHttpClient.DeleteAsync(uri);
+                                break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        capturedException = ExceptionDispatchInfo.Capture(e);
+                    }
+                    if (capturedException != null) //|| ReferenceEquals(response, null)
+                    {
+                        asana.ErrorCallback(function.Method, uri.AbsoluteUri, HttpStatusCode.RequestTimeout, capturedException.SourceException.GetBaseException().Message, triesLeft.Value);
+                        if (triesLeft > 1)
+                            return await GoAsync(asana, function, uri, content, triesLeft - 1);
+                        else
+                            capturedException.Throw();
+                    }
+                    if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.PreconditionFailed)
+                    {
 #if DEBUG
-                    asana.ErrorCallback(function.Method, uri.AbsoluteUri, response.StatusCode, "Success", 0);
+                        asana.ErrorCallback(function.Method, uri.AbsoluteUri, response.StatusCode, "Success", 0);
 #endif
-                }
-                else try
-                {
-                    response.EnsureSuccessStatusCode();
-                }
-                catch (HttpRequestException e)
-                {
-                    asana.ErrorCallback(function.Method, uri.AbsoluteUri, response.StatusCode, e.Message, triesLeft.Value);
-
-                    if (!ReferenceEquals(response.Headers.RetryAfter, null) && response.Headers.RetryAfter.Delta.HasValue)
-                    {
-                        var retryAfter = response.Headers.RetryAfter.Delta.Value.Seconds;
-//                        var retryAfter = DateTime.Now + response.Headers.RetryAfter.Delta.Value;
-                        ThrottleFor(retryAfter);
-                        return GoAsync(asana, function, uri, content).Result;
                     }
-                    if (triesLeft > 1)
-                        return GoAsync(asana, function, uri, content, triesLeft - 1).Result;
-                    else
-                        throw;
-                }
-                return response.Content.ReadAsStringAsync().Result;
+                    else 
+                    {
+                        capturedException = null;
+                        try
+                        {
+                            response.EnsureSuccessStatusCode();
+                        }
+                        catch (HttpRequestException e)
+                        {
+                            capturedException = ExceptionDispatchInfo.Capture(e);
+                        }
+                        if (capturedException != null)
+                        {
+                            asana.ErrorCallback(function.Method, uri.AbsoluteUri, response.StatusCode, capturedException.SourceException.Message, triesLeft.Value);
 
-                // Create a content object for the request
-                //HttpContent content_ = new System.Net.Http.StringContent(root.ToString(), Encoding.UTF8, "application/json");
-            });
+                            if (!ReferenceEquals(response.Headers.RetryAfter, null) && response.Headers.RetryAfter.Delta.HasValue)
+                            {
+                                var retryAfter = response.Headers.RetryAfter.Delta.Value.Seconds;
+                                //                        var retryAfter = DateTime.Now + response.Headers.RetryAfter.Delta.Value;
+                                ThrottleFor(retryAfter);
+                                return await GoAsync(asana, function, uri, content);
+                            }
+                            var failingStatusCodes = asana.NoRetryStatusCodes;
+                            if (triesLeft > 1 && !failingStatusCodes.Contains(response.StatusCode))
+                                return await GoAsync(asana, function, uri, content, triesLeft - 1);
+                            else
+                                capturedException.Throw();
+                        }
+                    }
+                    return await response.Content.ReadAsStringAsync();
+
+                    // Create a content object for the request
+                    //HttpContent content_ = new System.Net.Http.StringContent(root.ToString(), Encoding.UTF8, "application/json");
+//                });
         }
 
 

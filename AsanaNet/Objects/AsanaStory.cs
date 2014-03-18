@@ -22,25 +22,25 @@ namespace AsanaNet
     [Serializable]
     public partial class AsanaStory : AsanaEventedObject, IAsanaData
     {
-        [AsanaDataAttribute     ("type",        SerializationFlags.Omit)]
+        [AsanaData     ("type",        SerializationFlags.Omit)]
         public StoryType        Type            { get; private set; }
 
-        [AsanaDataAttribute     ("text",        SerializationFlags.Required)]
+        [AsanaData     ("text",        SerializationFlags.Required)]
         public string           Text            { get; set; }
 
-        [AsanaDataAttribute     ("created_by",  SerializationFlags.Omit)]
+        [AsanaData     ("created_by",  SerializationFlags.Omit)]
         public AsanaUser        CreatedBy       { get; private set; }
 
-        [AsanaDataAttribute     ("created_at",  SerializationFlags.Omit)]
+        [AsanaData     ("created_at",  SerializationFlags.Omit)]
         public AsanaDateTime    CreatedAt       { get; private set; }
 
-        [AsanaDataAttribute     ("source",      SerializationFlags.Omit)]
+        [AsanaData     ("source",      SerializationFlags.Omit)]
         public StorySource      Source          { get; private set; }
 
 //        [AsanaDataAttribute     ("target",      SerializationFlags.Omit)]
 //        public AsanaTask        Target          { get; internal set; }
 
-        [AsanaDataAttribute("target", SerializationFlags.Omit)]
+        [AsanaData("target", SerializationFlags.Omit)]
         public AsanaTask Target
         {
             get
@@ -49,25 +49,30 @@ namespace AsanaNet
             }
             internal set
             {
-                if (object.ReferenceEquals(value, null))
+                if (ReferenceEquals(value, null))
                     return;
                 
                 _target = value;
-
-                if (!IsObjectLocal)
-                {
-                    var collection = value.Stories;
-                    if (object.ReferenceEquals(collection, null))
-                        return;
-                    if (!collection.Contains(this))
-                        collection.Add(this);
-                }
             }
         }
+
+        internal override void TouchUpdated()
+        {
+            if (!IsObjectLocal && !ReferenceEquals(Target, null))
+            {
+                var collection = Target.Stories;
+                if (ReferenceEquals(collection, null))
+                    return;
+                if (!collection.Contains(this))
+                    collection.Add(this);
+            }
+            base.TouchUpdated();
+        }
+
         internal AsanaTask _target { get; set; }
 
         // ------------------------------------------------------
-        [AsanaDataAttribute("sync_removed", SerializationFlags.Optional)]
+        [AsanaData("sync_removed", SerializationFlags.Optional)]
         public override bool IsRemoved
         {
             get
