@@ -24,44 +24,7 @@ namespace AsanaNet
 		Basic,
 		OAuth
 	}
-    /*
-    public class ApiKey : INotifyPropertyChanged
-    {
-      private string _key;
-      // Declare the event 
-      public event PropertyChangedEventHandler PropertyChanged;
 
-      public ApiKey()
-      {
-      }
-
-      public ApiKey(string value)
-      {
-          this._key = value;
-      }
-
-      public string Key
-      {
-          get { return _key; }
-          set
-          {
-              _key = value;
-              // Call OnPropertyChanged whenever the property is updated
-              OnPropertyChanged("Key");
-          }
-      }
-
-      // Create the OnPropertyChanged method to raise the event 
-      protected void OnPropertyChanged(string name)
-      {
-          PropertyChangedEventHandler handler = PropertyChanged;
-          if (handler != null)
-          {
-              handler(this, new PropertyChangedEventArgs(name));
-          }
-      }
-    }
-    */
     [Serializable]
     public partial class Asana
     {        
@@ -440,9 +403,6 @@ namespace AsanaNet
                 list.Remove((T)obj);
             }
             Host.ObjectCache.Remove(obj.ID.ToString());
-//            obj.IsRemoved = true;
-            
-//            obj.ID = (Int64)AsanaExistance.Deleted;
         }
         public Type GetCacheTypeById(long id)
         {
