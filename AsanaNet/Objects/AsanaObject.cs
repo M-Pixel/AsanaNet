@@ -57,9 +57,9 @@ namespace AsanaNet
             var task = Host.GetEvents(this, ReferenceEquals(EventList, null) ? "0" : EventList.SyncToken, optFields,
                 AsanaCacheLevel.Ignore);
             task.ContinueWith(
-                    (eventList) =>
+                    async (eventList) =>
                     {
-                        EventList = eventList.Result;
+                        EventList = await eventList;
                     });
             return task;
         }
