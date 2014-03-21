@@ -82,11 +82,12 @@ namespace AsanaNet
 //        private AsanaWorkspace _workspace { get; set; }
 
         // ------------------------------------------------------
-
+        /*
         static public implicit operator AsanaTag(Int64 ID)
         {
             return Create(typeof(AsanaTag), ID) as AsanaTag;
         }
+         * */
         /*
         public AsanaTag(AsanaWorkspace workspace, Int64 id = 0) 
         {

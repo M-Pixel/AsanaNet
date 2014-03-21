@@ -446,7 +446,7 @@ namespace AsanaNet
                     if (cas.Length == 0)
                         continue;
 
-                    AsanaDataAttribute ca = cas[0] as AsanaDataAttribute;
+                    var ca = cas[0] as AsanaDataAttribute;
 
                     if (ca.Flags.HasFlag(SerializationFlags.Omit))
                         continue;
@@ -506,19 +506,21 @@ namespace AsanaNet
             {
                 present = false;
             }
-            else if (value.GetType() == typeof(string))
+                /*
+            else if (value is string)
             {
                 // explanation: we need to be able to delete a string too!
                 if ((value as string) == null)
                 //if (string.IsNullOrEmpty(value as string))
                     present = false;
             }
-            else if (value.GetType() == typeof(DateTime))
+                 * */
+            else if (value is DateTime)
             {
                 if((DateTime)value == new DateTime())
                     present = false;
             }
-            else if (value != null && value is AsanaObject)
+            else if (value is AsanaObject)
             {
                 if (ca.Fields.Length == 1)
                 {

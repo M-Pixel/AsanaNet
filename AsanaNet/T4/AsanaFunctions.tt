@@ -1,10 +1,13 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
 <#@ output extension=".cs" #>
 <#@ assembly name="System.Xml" #>
 <#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.IO" #>
 <#
  System.Xml.XmlDocument configurationData = new System.Xml.XmlDocument();
- configurationData.Load(@"AsanaNet/T4/AsanaFunctionDefinitions.xml");
+ string path = this.Host.ResolvePath("");
+ Directory.SetCurrentDirectory(path);
+ configurationData.Load(@"AsanaFunctionDefinitions.xml");
  // 
  System.Xml.XmlNodeList functionList = configurationData.GetElementsByTagName("Function");
  System.Xml.XmlNodeList associationList = configurationData.GetElementsByTagName("Association");
@@ -116,6 +119,19 @@ namespace AsanaNet
 			string responseTypeString = isCollection ? "AsanaCollectionResponseEventHandler" : "AsanaResponseEventHandler";
 			string objectType = isCollection ? "AsanaObjectCollection<"+function.Attributes["return"].Value+">" : function.Attributes["return"].Value;
 #>
+			// just returns cached response
+			public <#= objectType #> <#= function.Attributes["name"].Value #>CachedOrNull(<#= parameterStringWithType #>)
+			{
+				string cachePath = <# if (function.Attributes["parameters"].Value != "Int64"){ 
+				#>GetAsanaPartUri(AsanaFunction.GetFunction(Function.<#= function.Attributes["name"].Value #>)<#=parameterStringNoType#>); 
+				<# } else { #>string.Format(new PropertyFormatProvider(), "{0}"<#= parameterStringNoType #>);<# } #>
+
+                <#= objectType #> cachedObject = (<#= objectType #>) ObjectCache.Get(cachePath);
+                if (cachedObject != null<#= isCollection ? " && cachedObject.Initialized" : "" #>)
+                    return cachedObject;
+				return null;
+			}
+			// real one:
 			public async Task<<#= objectType #>> <#= function.Attributes["name"].Value #>(<#= parameterStringWithType #><#= secondArgumentComma #>string optFields = null, AsanaCacheLevel cacheLevel = AsanaCacheLevel.Default, Dictionary<string, object> extraCallArguments = null)
 			{
                 if (cacheLevel == AsanaCacheLevel.Default) cacheLevel = this.DefaultCacheLevel;
@@ -259,8 +275,9 @@ if (parameters.Length == 1)
         {
             if (!ReferenceEquals(buffered<#= justReturnName #>Object, null)) return buffered<#= justReturnName #>Object;
             if (IsObjectLocal) return buffered<#= justReturnName #>Object = new <#= objectType #>();
-            var task = Get<#= justReturnName #>(null, AsanaCacheLevel.UseExistingOrNull).GetAwaiter().GetResult();
-            if (!object.ReferenceEquals(task, null)) return task;
+            var obj = Host.<#= function.Attributes["name"].Value #>CachedOrNull(this<#= parameterStringNoType #>);
+            if (obj != null) return obj;
+			// lazy initialization + caching
             <#= justReturnName #> = buffered<#= justReturnName #>Object = new <#= objectType #>();
             return buffered<#= justReturnName #>Object;
         }
@@ -301,18 +318,17 @@ if (parameters.Length == 1)
 <# if (function.Attributes["inObjectSelf"] != null && !String.IsNullOrWhiteSpace(function.Attributes["inObjectSelf"].Value)) { 
 #>
             task.ContinueWith(
-                (prevTask) =>
+                async prevTask =>
                 {
                     if (cacheLevel < AsanaCacheLevel.UseExistingOrNull)
 <# if (isCollection) { #>
-                        foreach (var obj in prevTask.Result)
+                        foreach (var obj in await prevTask)
                         {
                             obj.<#= function.Attributes["inObjectSelf"].Value #> = this;
                         }
 <# } else { #>
-                        prevTask.Result.<#= function.Attributes["inObjectSelf"].Value #>;
+                        await prevTask.<#= function.Attributes["inObjectSelf"].Value #>;
 <# } #>
-                    //return prevTask.Result;
                 }, TaskContinuationOptions.NotOnFaulted);
 <# } #>
             return task;

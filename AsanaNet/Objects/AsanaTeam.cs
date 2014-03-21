@@ -57,10 +57,11 @@ namespace AsanaNet
         // ------------------------------------------------------
 
 //        public override bool IsObjectLocal { get { return true; } }
-
+        /*
         static public implicit operator AsanaTeam(Int64 ID)
         {
             return Create(typeof(AsanaTeam), ID) as AsanaTeam;
         }
+         * */
     }
 }

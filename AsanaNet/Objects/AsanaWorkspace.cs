@@ -20,6 +20,7 @@ namespace AsanaNet
         public string[] EmailDomains { get; private set; }
 
         public readonly AsanaObjectCollection<AsanaTask> FetchedTasks = new AsanaObjectCollection<AsanaTask>();
+        public readonly AsanaObjectCollection<AsanaTask> MyTasks = new AsanaObjectCollection<AsanaTask>();
 //        public readonly AsanaObjectCollection<AsanaTeam> FetchedTeams = new AsanaObjectCollection<AsanaTeam>();
 
         [AsanaData("sync_addedproject")]
@@ -118,10 +119,11 @@ namespace AsanaNet
         }
 
         // ------------------------------------------------------
-
+        /*
         static public implicit operator AsanaWorkspace(Int64 id)
         {
             return Create(typeof(AsanaWorkspace), id) as AsanaWorkspace;
         }
+         * */
     }
 }

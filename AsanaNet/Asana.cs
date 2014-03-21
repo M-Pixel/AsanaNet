@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Net;
 using System.Web;
@@ -85,9 +86,18 @@ namespace AsanaNet
 
         #region Methods
 
-        internal void GenerateAuthenticationHeader()
+        internal ExceptionDispatchInfo GenerateAuthenticationHeader()
         {
-            var apiKeyOrBearerToken = ApiKeyOrBearerToken();
+            string apiKeyOrBearerToken;
+            try
+            {
+                apiKeyOrBearerToken = ApiKeyOrBearerToken();
+            }
+            catch (Exception e)
+            {
+                return ExceptionDispatchInfo.Capture(e);
+            }
+            
             string encodedApiKey = String.Empty;
             if (AuthType != AuthenticationType.OAuth)
             {
@@ -96,6 +106,8 @@ namespace AsanaNet
 
             var defaultAuth = new AuthenticationHeaderValue(AuthType == AuthenticationType.OAuth ? "Bearer" : "Basic", AuthType == AuthenticationType.OAuth ? apiKeyOrBearerToken : encodedApiKey);
             BaseHttpClient.DefaultRequestHeaders.Authorization = defaultAuth;
+
+            return null;
         }
 
         static Asana()
@@ -417,7 +429,7 @@ namespace AsanaNet
         Ignore = 0, // Always fetch new objects
         FillExisting = 1, // If Possible
         UseExisting = 2, // If Possible
-        UseExistingOrNull = 3, 
+        UseExistingOrNull = 3, // Returns what's cached, or null
         Default = UseExisting
     }
 }

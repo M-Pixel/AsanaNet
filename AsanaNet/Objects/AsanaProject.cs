@@ -133,12 +133,12 @@ namespace AsanaNet
         
 
         // ------------------------------------------------------
-
+        /*
         static public implicit operator AsanaProject(Int64 ID)
         {
             return Create(typeof(AsanaProject), ID) as AsanaProject;
         }
-
+        */
         public AsanaProject(AsanaTeam team = null)
         {
             Team = team;

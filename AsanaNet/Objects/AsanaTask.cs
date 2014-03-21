@@ -51,7 +51,7 @@ namespace AsanaNet
 //        [AsanaDataAttribute     ("parent",          SerializationFlags.Optional)]
 //        public AsanaTask        Parent              { get; internal set; }
 
-        [AsanaData("parent", SerializationFlags.Optional)]
+        [AsanaData("parent", SerializationFlags.Optional, int.MaxValue, "ID")]
         public AsanaTask Parent
         {
             get
@@ -220,10 +220,12 @@ namespace AsanaNet
                 // 
             }
         }
+        /*
         static public implicit operator AsanaTask(Int64 ID)
         {
             return Create(typeof(AsanaTask), ID) as AsanaTask;
         }
+         * */
         /*
         public AsanaTask(AsanaWorkspace workspace, AsanaTask parentTask = null) 
         {
